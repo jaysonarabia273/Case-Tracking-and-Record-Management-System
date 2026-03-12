@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <span>Students</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-users"></i> Student Management</h1>
+                    <p class="page-subtitle">View and manage student profiles</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-search"></i> Search Students</h2>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID, email..." style="width: 350px;">
+                        <select id="courseFilter" class="form-control" style="width: 200px;">
+                            <option value="">All Courses</option>
+                            <option value="BSIT">BSIT</option>
+                            <option value="BSCS">BSCS</option>
+                            <option value="BSIS">BSIS</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body no-padding">
+                    {% if students %}
+                    <div class="table-container">
+                        <table id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student Number</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Course</th>
+                                    <th>Year Level</th>
+                                    <th>Cases</th>
+                                    <th>Sessions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr data-course="{{ student.course }}">
+                                    <td><strong>{{ student.student_number }}</strong></td>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ student.user.get_full_name }}</div>
+                                    </td>
+                                    <td>{{ student.user.email }}</td>
+                                    <td>{{ student.course|default:"Not set" }}</td>
+                                    <td>{{ student.year_level|default:"Not set" }}</td>
+                                    <td>
+                                        <span class="badge badge-draft">
+                                            {{ student.cases_count|default:0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-in-progress">
+                                            {{ student.sessions_count|default:0 }}
+                                        </span>
+                                    </td>
+                                    <td class="table-actions">
+                                        <a href="{% url 'counselor_student_profile' student.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View Profile
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-users"></i></div>
+                        <h3 class="empty-state-title">No Students Found</h3>
+                        <p class="empty-state-text">No student records available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            filterTable();
+        });
+        
+        document.getElementById('courseFilter').addEventListener('change', function() {
+            filterTable();
+        });
+        
+        function filterTable() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const courseValue = document.getElementById('courseFilter').value;
+            const rows = document.querySelectorAll('#studentsTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const course = row.getAttribute('data-course');
+                const matchesSearch = text.includes(searchValue);
+                const matchesCourse = !courseValue || course === courseValue;
+                
+                row.style.display = (matchesSearch && matchesCourse) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

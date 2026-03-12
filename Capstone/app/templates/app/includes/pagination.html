@@ -1,0 +1,55 @@
+{% if page_obj.has_other_pages %}
+<div class="pagination-container">
+    <div class="pagination-info">
+        <span class="pagination-text">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            ({{ page_obj.paginator.count }} total)
+        </span>
+    </div>
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{{ param_name }}=1{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn" title="First">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a href="?{{ param_name }}={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn" title="Previous">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        {% else %}
+            <span class="pagination-btn disabled" title="First">
+                <i class="fas fa-angle-double-left"></i>
+            </span>
+            <span class="pagination-btn disabled" title="Previous">
+                <i class="fas fa-angle-left"></i>
+            </span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="pagination-btn active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?{{ param_name }}={{ num }}{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn">{{ num }}</a>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                <a href="?{{ param_name }}={{ num }}{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn">{{ num }}</a>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                <span class="pagination-ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?{{ param_name }}={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn" title="Next">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a href="?{{ param_name }}={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != param_name %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="pagination-btn" title="Last">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        {% else %}
+            <span class="pagination-btn disabled" title="Next">
+                <i class="fas fa-angle-right"></i>
+            </span>
+            <span class="pagination-btn disabled" title="Last">
+                <i class="fas fa-angle-double-right"></i>
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

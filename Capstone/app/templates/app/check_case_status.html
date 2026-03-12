@@ -1,0 +1,350 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Case Status - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Check Case Status</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Check Status</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Search Case Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Search for Case or Session</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="search-filter-bar">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input 
+                                type="text" 
+                                name="case_number" 
+                                class="form-control" 
+                                placeholder="Enter Case Number (e.g., CASE-123 or SESSION-456)"
+                                value="{{ request.POST.case_number }}"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Case Details (if found) -->
+        {% if form_submitted %}
+            {% if case_found %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        {% if case_type == 'case' %}
+                        Case Details
+                        {% else %}
+                        Session Details
+                        {% endif %}
+                    </h2>
+                    {% if case.status == 'pending' %}
+                    <span class="badge badge-pending">Pending</span>
+                    {% elif case.status == 'in_progress' or case.status == 'approved' %}
+                    <span class="badge badge-in-progress">In Progress</span>
+                    {% elif case.status == 'resolved' or case.status == 'completed' %}
+                    <span class="badge badge-completed">Completed</span>
+                    {% elif case.status == 'rejected' or case.status == 'cancelled' %}
+                    <span class="badge badge-rejected">{{ case.status|title }}</span>
+                    {% else %}
+                    <span class="badge badge-draft">{{ case.status|title }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+                        <!-- Case Information -->
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--spacing-md); border-bottom: 2px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                                <i class="fas fa-info-circle" style="color: var(--primary-green);"></i>
+                                Basic Information
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">
+                                        {% if case_type == 'case' %}Case ID{% else %}Session ID{% endif %}:
+                                    </strong>
+                                    <p style="margin: 4px 0 0 0; color: var(--text-primary);">
+                                        {% if case_type == 'case' %}
+                                        #CASE-{{ case.id }}
+                                        {% else %}
+                                        #SESSION-{{ case.id }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">Title:</strong>
+                                    <p style="margin: 4px 0 0 0; color: var(--text-primary);">
+                                        {% if case_type == 'case' %}
+                                        {{ case.title }}
+                                        {% else %}
+                                        Guidance Session - {{ case.get_reason_display }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">Date Created:</strong>
+                                    <p style="margin: 4px 0 0 0; color: var(--text-primary);">{{ case.created_at|date:"F d, Y - g:i A" }}</p>
+                                </div>
+                                
+                                {% if case_type == 'guidance_session' and case.scheduled_date %}
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">Scheduled Date:</strong>
+                                    <p style="margin: 4px 0 0 0; color: var(--primary-green); font-weight: 600;">
+                                        {{ case.scheduled_date|date:"F d, Y" }}
+                                        {% if case.scheduled_time %}
+                                        at {{ case.scheduled_time }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Assignment Information -->
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--spacing-md); border-bottom: 2px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                                <i class="fas fa-user-tie" style="color: var(--secondary-blue);"></i>
+                                Assignment Details
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">
+                                        {% if case_type == 'case' %}Assigned Counselor{% else %}Counselor{% endif %}:
+                                    </strong>
+                                    <p style="margin: 4px 0 0 0; color: var(--text-primary);">
+                                        {% if case_type == 'case' %}
+                                            {% if case.counselor %}
+                                            {{ case.counselor.user.first_name|default:case.counselor.user.username }}
+                                            {% else %}
+                                            <span style="color: var(--text-muted);">Not assigned yet</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if case.assigned_counselor %}
+                                            {{ case.assigned_counselor.user.first_name|default:case.assigned_counselor.user.username }}
+                                            {% elif case.preferred_counselor %}
+                                            {{ case.preferred_counselor.user.first_name|default:case.preferred_counselor.user.username }} (Preferred)
+                                            {% else %}
+                                            <span style="color: var(--text-muted);">Not assigned yet</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">Status:</strong>
+                                    <p style="margin: 4px 0 0 0;">
+                                        {% if case.status == 'pending' %}
+                                        <span class="badge badge-pending">Pending Review</span>
+                                        {% elif case.status == 'in_progress' or case.status == 'approved' %}
+                                        <span class="badge badge-in-progress">In Progress</span>
+                                        {% elif case.status == 'resolved' or case.status == 'completed' %}
+                                        <span class="badge badge-completed">Completed</span>
+                                        {% elif case.status == 'rejected' or case.status == 'cancelled' %}
+                                        <span class="badge badge-rejected">{{ case.status|title }}</span>
+                                        {% else %}
+                                        <span class="badge badge-draft">{{ case.status|title }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div style="margin-top: var(--spacing-xl);">
+                        <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--spacing-md); border-bottom: 2px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                            <i class="fas fa-align-left" style="color: var(--accent-gold);"></i>
+                            Description
+                        </h3>
+                        <p style="color: var(--text-primary); line-height: 1.6; white-space: pre-wrap;">
+                            {% if case_type == 'case' %}
+                            {{ case.description|default:"No description provided." }}
+                            {% else %}
+                            {{ case.concern_description|default:"No description provided." }}
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="margin-top: var(--spacing-xl); display: flex; gap: var(--spacing-md); justify-content: flex-end;">
+                        {% if case_type == 'case' %}
+                        <a href="{% url 'student_case' %}?case_id={{ case.id }}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i>
+                            View Full Details
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'student_dashboard' %}" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Case Not Found -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="empty-state-title">Case Not Found</h3>
+                        <p class="empty-state-text">
+                            We couldn't find a case or session with that number. Please check the number and try again, or make sure it belongs to your account.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Help Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">How to Find Your Case Number</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-lg);">
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 110, 67, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-green); font-size: 20px; font-weight: 700;">1</div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">Dashboard</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">View your case number in the "Recent Cases" section on your dashboard.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(43, 125, 171, 0.1); display: flex; align-items: center; justify-content: center; color: var(--secondary-blue); font-size: 20px; font-weight: 700;">2</div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">My Cases</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Find all your case numbers in the "My Cases" archive page.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 193, 7, 0.1); display: flex; align-items: center; justify-content: center; color: var(--warning); font-size: 20px; font-weight: 700;">3</div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">Email</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Check your email for notifications containing your case number.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+                    
+                    toggle.on('click', function() {
+                        $('.sidebar').toggleClass('active');
+                    });
+                    
+                    $(document).on('click', function(e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+            
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+            
+            // Auto-hide messages after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+            
+            // Format case number input
+            $('input[name="case_number"]').on('input', function() {
+                let value = $(this).val().toUpperCase();
+                $(this).val(value);
+            });
+        });
+    </script>
+    
+    <style>
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html>

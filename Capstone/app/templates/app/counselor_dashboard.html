@@ -1,0 +1,423 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counselor Dashboard - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="{% static 'app/animations.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header animate-fade-in-down">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-th-large"></i>
+                        Dashboard
+                    </h1>
+                    <p class="page-subtitle">Welcome back, {{ user_name }}!</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline btn-ripple hover-lift" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn btn-primary btn-ripple btn-shine hover-lift" onclick="window.location.href='{% url 'counselor_sessions' %}'">
+                        <i class="fas fa-plus"></i> New Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card card-enter hover-lift">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ pending_sessions_count }}</div>
+                            <div class="stat-card-label">Pending Sessions</div>
+                        </div>
+                        <div class="stat-card-icon pending animate-pulse">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Requires attention</span>
+                    </div>
+                </div>
+
+                <div class="stat-card card-enter hover-lift">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ active_cases_count }}</div>
+                            <div class="stat-card-label">Active Cases</div>
+                        </div>
+                        <div class="stat-card-icon in-progress animate-pulse">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-trend">
+                        <i class="fas fa-minus"></i>
+                        <span>In progress</span>
+                    </div>
+                </div>
+
+                <div class="stat-card card-enter hover-lift">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ completed_count }}</div>
+                            <div class="stat-card-label">Completed This Month</div>
+                        </div>
+                        <div class="stat-card-icon completed animate-pulse">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+{{ completed_percentage }}% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card card-enter hover-lift">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ total_students }}</div>
+                            <div class="stat-card-label">Total Students</div>
+                        </div>
+                        <div class="stat-card-icon students animate-pulse">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-trend">
+                        <i class="fas fa-users"></i>
+                        <span>Active students</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Sessions -->
+            <div class="card animate-fade-in-up hover-lift">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-clock"></i>
+                        Pending Session Requests
+                    </h2>
+                    <a href="{% url 'counselor_sessions' %}" class="btn btn-sm btn-outline btn-ripple hover-grow">View All</a>
+                </div>
+                <div class="card-body no-padding">
+                    {% if pending_sessions %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Student</th>
+                                    <th>Reason</th>
+                                    <th>Preferred Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in pending_sessions %}
+                                <tr>
+                                    <td><strong>#{{ session.id }}</strong></td>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ session.student.user.get_full_name }}</div>
+                                        <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                            {{ session.student.student_number }}
+                                        </div>
+                                    </td>
+                                    <td>{{ session.get_reason_display }}</td>
+                                    <td>
+                                        {% if session.scheduled_date %}
+                                        {{ session.scheduled_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge badge-pending">Pending</span></td>
+                                    <td class="table-actions">
+                                        <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-check-circle"></i></div>
+                        <h3 class="empty-state-title">All Caught Up!</h3>
+                        <p class="empty-state-text">No pending session requests at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if pending_sessions.has_other_pages %}
+                <div class="card-footer">
+                    {% include "app/includes/pagination.html" with page_obj=pending_sessions param_name="pending_page" %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Active Cases -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-folder-open"></i>
+                        Active Cases
+                    </h2>
+                    <a href="{% url 'counselor_cases' %}" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body no-padding">
+                    {% if active_cases %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for case in active_cases %}
+                                <tr>
+                                    <td><strong>#{{ case.id }}</strong></td>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ case.title|truncatewords:5 }}</div>
+                                        <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                            {{ case.description|truncatewords:8 }}
+                                        </div>
+                                    </td>
+                                    <td>{{ case.student.user.get_full_name }}</td>
+                                    <td>
+                                        {% if case.status == 'pending' %}
+                                        <span class="badge badge-pending">Pending</span>
+                                        {% elif case.status == 'in_progress' %}
+                                        <span class="badge badge-in-progress">In Progress</span>
+                                        {% elif case.status == 'completed' %}
+                                        <span class="badge badge-completed">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ case.updated_at|date:"M d, Y" }}</td>
+                                    <td class="table-actions">
+                                        <a href="{% url 'counselor_case_detail' case.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-folder"></i></div>
+                        <h3 class="empty-state-title">No Active Cases</h3>
+                        <p class="empty-state-text">There are no active cases at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if active_cases.has_other_pages %}
+                <div class="card-footer">
+                    {% include "app/includes/pagination.html" with page_obj=active_cases param_name="cases_page" %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Schedule Calendar
+                    </h2>
+                    <div class="calendar-controls">
+                        <button class="btn btn-sm btn-outline" onclick="calendarToday()">
+                            <i class="fas fa-dot-circle"></i> <span class="btn-text">Today</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline calendar-view-desktop" onclick="switchView('dayGridMonth')">
+                            <i class="fas fa-th"></i> <span class="btn-text">Month</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline calendar-view-desktop" onclick="switchView('timeGridWeek')">
+                            <i class="fas fa-calendar-week"></i> <span class="btn-text">Week</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="switchView('timeGridDay')">
+                            <i class="fas fa-calendar-day"></i> <span class="btn-text">Day</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
+            <!-- Upcoming Schedules List -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Upcoming Schedules
+                    </h2>
+                    <a href="{% url 'counselor_calendar' %}" class="btn btn-sm btn-outline">Full Calendar View</a>
+                </div>
+                <div class="card-body no-padding">
+                    {% if upcoming_schedules %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Student</th>
+                                    <th>Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in upcoming_schedules %}
+                                <tr>
+                                    <td>{{ schedule.scheduled_date|date:"M d, Y" }}</td>
+                                    <td>{{ schedule.scheduled_time|time:"g:i A" }}</td>
+                                    <td>{{ schedule.student.user.get_full_name }}</td>
+                                    <td>
+                                        {% if schedule.reason %}
+                                        {{ schedule.get_reason_display }}
+                                        {% else %}
+                                        Case Session
+                                        {% endif %}
+                                    </td>
+                                    <td class="table-actions">
+                                        <a href="{% url 'counselor_session_detail' schedule.id %}" class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-calendar"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-calendar"></i></div>
+                        <h3 class="empty-state-title">No Upcoming Schedules</h3>
+                        <p class="empty-state-text">Your schedule is clear for now.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if upcoming_schedules.has_other_pages %}
+                <div class="card-footer">
+                    {% include "app/includes/pagination.html" with page_obj=upcoming_schedules param_name="schedules_page" %}
+                </div>
+                {% endif %}
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    {% include "app/includes/notification_toast.html" %}
+    {% include "app/includes/notification_realtime.html" %}
+
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script>
+        window._calendar = null;
+        
+        function switchView(viewName) {
+            if (window._calendar) { 
+                window._calendar.changeView(viewName); 
+            }
+        }
+        
+        function calendarToday() {
+            if (window._calendar) { 
+                window._calendar.today(); 
+            }
+        }
+        
+        function calendarReload() {
+            if (window._calendar) { 
+                window._calendar.refetchEvents(); 
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) {
+                console.error('Calendar element not found!');
+                return;
+            }
+            
+            // Determine initial view based on screen size
+            const isMobile = window.innerWidth < 768;
+            const initialView = isMobile ? 'timeGridDay' : 'dayGridMonth';
+            
+            window._calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: initialView,
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: '' // Controls handled by custom buttons
+                },
+                height: 'auto',
+                // Force calendar to show full month grid with all dates
+                fixedWeekCount: false,
+                showNonCurrentDates: true,
+                dayMaxEvents: true,
+                navLinks: false,
+                editable: false,
+                selectable: false,
+                events: {
+                    url: '{% url "calendar_events" %}',
+                    method: 'GET',
+                    failure: function() {
+                        alert('There was an error loading calendar events!');
+                    }
+                },
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                eventTimeFormat: { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    meridiem: 'short'
+                },
+                // Mobile-specific settings
+                windowResize: function(view) {
+                    const width = window.innerWidth;
+                    if (width < 768) {
+                        window._calendar.changeView('timeGridDay');
+                    } else if (width < 1024) {
+                        window._calendar.changeView('timeGridWeek');
+                    }
+                },
+                // Better mobile display
+                eventDisplay: 'block',
+                displayEventTime: true,
+                displayEventEnd: false,
+                // Custom styling
+                eventColor: '#16a34a',
+                eventBackgroundColor: '#16a34a',
+                eventBorderColor: '#15803d',
+            });
+            
+            window._calendar.render();
+        });
+    </script>
+</body>
+</html>

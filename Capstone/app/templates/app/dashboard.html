@@ -1,0 +1,374 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Profile Section -->
+            <div class="profile">
+                <div class="profile-img">
+                <i class="fas fa-user"></i>
+            </div>
+                <h3>{{user_name}}</h3>
+                <p>Faculty Member</p>
+            </div>
+            
+            <!-- Menu Items -->
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item active">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'student_case' %}" class="menu-item">
+                    <span class="icon">📋</span>
+                    <span>Student's Cases</span>
+                </a>
+                <a href="{% url 'evaluation' %}" class="menu-item">
+                    <span class="icon">📝</span>
+                    <span>Evaluations</span>
+                </a>
+                <a href="{% url 'student_list' %}" class="menu-item">
+                    <span class="icon">👥</span>
+                    <span>Students</span>
+                </a>
+
+                <a href="{% url 'create_session' %}" class="menu-item">
+                    <span class="icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+
+                 <a href="{% url 'session_created' %}" class="menu-item active">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+
+                <a href="{% url 'analytics' %}" class="menu-item">
+                    <span class="icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+
+                
+                
+            </div>
+            
+            <!-- Logout -->
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">
+                    <i>🚪</i> Log Out
+                </button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <h1>Welcome to Counselor's Dashboard</h1>
+                <div class="user-controls">
+                    <div class="notifications">
+                        <span class="icon">🔔</span>
+                    </div>
+                    <div class="messages">
+                        <span class="icon">✉️</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Summary -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <h3>{{ active_count }}</h3>
+                        <p>Active Cases</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>{{ completed_count }}</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-info">
+                        <h3>{{ pending_count }}</h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>{{ total_students }}</h3>
+                        <p>Students</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Calendar Section -->
+<section class="calendar-section">
+    <div class="section-header">
+        <h2>My Schedule Calendar</h2>
+    </div>
+    <div id="calendar"></div>
+</section>
+
+
+            <!-- Cases Section -->
+            <section class="cases-section">
+                <div class="section-header">
+                    <h2>Ongoing Cases</h2>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                
+                <div class="cases-list">
+                    {% if active_cases %}
+                        {% for case in active_cases %}
+                        <div class="case-card">
+                            <div class="case-header">
+                                <h4>{{ case.title }}</h4>
+                                <span class="case-status status-{{ case.status }}">
+                                    {% if case.status == 'in_progress' %}
+                                        In Progress
+                                    {% elif case.status == 'under_review' %}
+                                        Under Review
+                                    {% else %}
+                                        {{ case.status|title }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="case-info">
+                                <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                <p><strong>Counselor:</strong> {{ case.counselor_name }}</p>
+                                {% if case.type == 'guidance_session' %}
+                                    <p><strong>Preferred Date:</strong> {{ case.preferred_date }}</p>
+                                    <p><strong>Preferred Time:</strong> {{ case.preferred_time }}</p>
+                                {% endif %}
+                                <p><strong>Description:</strong> {{ case.description }}</p>
+                                <p><strong>Created:</strong> {{ case.created_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="case-actions">
+                                {% if case.type == 'case' %}
+                                    <a href="#" class="btn-view">View Details</a>
+                                {% else %}
+                                    <a href="#" class="btn-view">View Session</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No ongoing cases at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Completed Cases -->
+            <section class="cases-section">
+                <div class="section-header">
+                    <h2>Completed Cases</h2>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                
+                <div class="cases-list">
+                    {% if completed_cases %}
+                        {% for case in completed_cases %}
+                        <div class="case-card completed">
+                            <div class="case-header">
+                                <h4>{{ case.title }}</h4>
+                                <span class="case-status status-resolved">
+                                    {% if case.status == 'resolved' %}
+                                        Resolved
+                                    {% else %}
+                                        Completed
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="case-info">
+                                <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                <p><strong>Counselor:</strong> {{ case.counselor_name }}</p>
+                                {% if case.type == 'guidance_session' %}
+                                    <p><strong>Session Date:</strong> {{ case.preferred_date }}</p>
+                                {% endif %}
+                                <p><strong>Description:</strong> {{ case.description }}</p>
+                                <p><strong>Completed:</strong> {{ case.updated_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="case-actions">
+                                {% if case.type == 'case' %}
+                                    <a href="#" class="btn-view">View Details</a>
+                                {% else %}
+                                    <a href="#" class="btn-view">View Session</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No completed cases yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+
+
+   document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: {
+            url: '{% url "calendar_events" %}', // Make sure this URL is fetching the updated events
+            method: 'GET',
+            failure: function() {
+                alert('There was an error fetching events!');
+            }
+        },
+        eventClick: function(info) {
+            window.open(info.event.url, '_blank');
+        },
+            eventDidMount: function(info) {
+                const status = info.event.extendedProps.status;
+                const eventType = info.event.extendedProps.type;
+
+            // Set colors based on status
+            if (status === 'pending') {
+                info.el.style.backgroundColor = '#f59e0b'; // amber
+                info.el.style.borderColor = '#f59e0b';
+            } else if (status === 'approved') {
+                info.el.style.backgroundColor = '#3b82f6'; // blue
+                info.el.style.borderColor = '#3b82f6';
+            } else if (status === 'completed') {
+                info.el.style.backgroundColor = '#10b981'; // green
+                info.el.style.borderColor = '#10b981';
+            } else if (status === 'cancelled') {
+                info.el.style.backgroundColor = '#ef4444'; // red
+                info.el.style.borderColor = '#ef4444';
+            }
+
+            // Add status indicator
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            const titleEl = info.el.querySelector('.fc-event-title');
+            if (titleEl) {
+                titleEl.innerHTML = `<strong>${info.event.title}</strong><br><small>Status: ${statusText}</small>`;
+            }
+        },
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        },
+        nowIndicator: true,
+        slotMinTime: '08:00:00',
+        slotMaxTime: '20:00:00',
+        height: 'auto',
+        contentHeight: 'auto',
+        dayMaxEvents: true
+    });
+
+    // Render the calendar
+    calendar.render();
+
+    // Use sessionStorage or localStorage to force a calendar refresh after creating a new session
+    const fromSessionCreation = sessionStorage.getItem('newSessionCreated');
+    if (fromSessionCreation) {
+        calendar.refetchEvents(); // Refresh events from the server after creating a new session
+        sessionStorage.removeItem('newSessionCreated');
+    }
+
+    // Real-time update mechanism
+    function refreshCalendar() {
+        calendar.refetchEvents();
+    }
+
+    // Refresh calendar every 60 seconds
+    setInterval(refreshCalendar, 60000);
+});
+
+            // Sticky Sidebar Implementation
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const container = document.querySelector('.container');
+            
+            // Only apply on desktop view
+            function applyStickySidebar() {
+                if (window.innerWidth > 768) {
+                    // Apply fixed position for sidebar
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.top = '0';
+                    sidebar.style.left = '0';
+                    sidebar.style.height = '100vh';
+                    sidebar.style.width = '280px';
+                    sidebar.style.overflow = 'auto';
+                    sidebar.style.zIndex = '1000';
+                    
+                    // Adjust main content to make room for sidebar
+                    mainContent.style.marginLeft = '280px';
+                } else {
+                    // Remove fixed positioning for mobile
+                    sidebar.style.position = 'relative';
+                    sidebar.style.height = 'auto';
+                    sidebar.style.width = '100%';
+                    sidebar.style.overflow = 'visible';
+                    sidebar.style.zIndex = 'auto';
+                    
+                    // Reset main content margin
+                    mainContent.style.marginLeft = '0';
+                }
+            }
+            
+            // Apply on page load
+            applyStickySidebar();
+            
+            // Apply on window resize
+            window.addEventListener('resize', applyStickySidebar);
+
+            // Adjust logout position for better visibility
+            const logout = document.querySelector('.logout');
+            if (logout) {
+                logout.style.marginTop = '15px';
+                logout.style.marginBottom = '10px';
+                logout.style.paddingTop = '15px';
+            }
+        
+
+
+
+    </script>
+
+<!-- Your other <script> tags... -->
+
+<!-- ✅ Load FullCalendar JS LAST -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+
+
+
+</body>
+</html>

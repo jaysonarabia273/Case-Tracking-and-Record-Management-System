@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Cases Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/student_case.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-img"><i class="fas fa-user"></i></div>
+                <h3>{{ user_name }}</h3>
+                <p>Faculty Member</p>
+            </div>
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item"><span class="icon">📊</span> Dashboard</a>
+                <a href="{% url 'student_case' %}" class="menu-item active"><span class="icon">📋</span> Student's Cases</a>
+                <a href="{% url 'evaluation' %}" class="menu-item"><span class="icon">📝</span> Evaluations</a>
+                <a href="{% url 'student_list' %}" class="menu-item"><span class="icon">👥</span> Students</a>
+                <a href="{% url 'create_session' %}" class="menu-item">
+                    <span class="icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+                 <a href="{% url 'session_created' %}" class="menu-item active">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+
+                <a href="{% url 'analytics' %}" class="menu-item"><span class="icon">📈</span> Analytics</a>
+                <a href="#" class="menu-item"><span class="icon">⚙️</span> Settings</a>
+            </div>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit"><i>🚪</i> Log Out</button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="top-header">
+                <h1>Student Cases Management</h1>
+                <div class="user-controls">
+                    <div class="notifications"><span class="icon">🔔</span></div>
+                    <div class="messages"><span class="icon">✉️</span></div>
+                </div>
+            </header>
+
+            <!-- Tabs Section -->
+            <div class="tabs-section">
+                <div class="tabs-container">
+                    <button class="tab-btn active" onclick="switchTab('ongoing', event)">Ongoing Cases</button>
+                    <button class="tab-btn" onclick="switchTab('pending', event)">Pending Cases</button>
+                    <button class="tab-btn" onclick="switchTab('completed', event)">Completed Cases</button>
+                    <button class="tab-btn" onclick="switchTab('history', event)">Case History</button>
+                </div>
+            </div>
+
+            <!-- Ongoing -->
+            <section id="ongoing" class="cases-section tab-content active">
+                <div class="section-header">
+                    <h2>Ongoing Cases</h2>
+                </div>
+                <div class="cases-list">
+                    {% if ongoing_cases %}
+                        {% for case in ongoing_cases %}
+                            <div class="case-card">
+                                <div class="case-header">
+                                    <h4>{{ case.title }}</h4>
+                                    <span class="case-status">{{ case.status|title }}</span>
+                                </div>
+                                <div class="case-info">
+                                    <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                    <p><strong>Description:</strong> {{ case.description }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No ongoing cases.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Pending -->
+            <section id="pending" class="cases-section tab-content">
+                <div class="section-header">
+                    <h2>Pending Cases</h2>
+                </div>
+                <div class="cases-list">
+                    {% if pending_cases %}
+                        {% for case in pending_cases %}
+                            <div class="case-card">
+                                <div class="case-header">
+                                    <h4>{{ case.title }}</h4>
+                                    <span class="case-status">{{ case.status|title }}</span>
+                                </div>
+                                <div class="case-info">
+                                    <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                    <p><strong>Description:</strong> {{ case.description }}</p>
+                                </div>
+                            </div>
+
+                            
+
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No pending cases.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Completed -->
+            <section id="completed" class="cases-section tab-content">
+                <div class="section-header">
+                    <h2>Completed Cases</h2>
+                </div>
+                <div class="cases-list">
+                    {% if completed_cases %}
+                        {% for case in completed_cases %}
+                            <div class="case-card">
+                                <div class="case-header">
+                                    <h4>{{ case.title }}</h4>
+                                    <span class="case-status">Resolved</span>
+                                </div>
+                                <div class="case-info">
+                                    <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                    <p><strong>Description:</strong> {{ case.description }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No completed cases.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Case History -->
+            <section id="history" class="cases-section tab-content">
+                <div class="section-header">
+                    <h2>Case History</h2>
+                </div>
+                <div class="cases-list">
+                    {% if case_history %}
+                        {% for case in case_history %}
+                            <div class="case-card">
+                                <div class="case-header">
+                                    <h4>{{ case.title }}</h4>
+                                    <span class="case-status">{{ case.status|title }}</span>
+                                </div>
+                                <div class="case-info">
+                                    <p><strong>Student:</strong> {{ case.student_name }}</p>
+                                    <p><strong>Description:</strong> {{ case.description }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No case history available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- JS: Tab Switching -->
+    <script>
+
+
+        // Toggle visibility of the date and time inputs based on the selected status
+    function toggleDateTimeInput() {
+        var status = document.getElementById('status').value;
+        var datetimePicker = document.getElementById('datetime-picker');
+        
+        if (status === 'in_progress') {
+            datetimePicker.style.display = 'block';  // Show date/time picker
+        } else {
+            datetimePicker.style.display = 'none';  // Hide date/time picker
+        }
+    }
+    
+    // Initialize the page to reflect the current status
+    window.onload = function() {
+        toggleDateTimeInput();  // Ensure correct state on page load
+    }
+
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.tab-content').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar stickiness
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            function applyStickySidebar() {
+                if (window.innerWidth > 768) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.top = '0';
+                    sidebar.style.left = '0';
+                    sidebar.style.height = '100vh';
+                    sidebar.style.width = '280px';
+                    sidebar.style.overflow = 'auto';
+                    sidebar.style.zIndex = '1000';
+                    mainContent.style.marginLeft = '280px';
+                } else {
+                    sidebar.style.position = 'relative';
+                    sidebar.style.height = 'auto';
+                    sidebar.style.width = '100%';
+                    sidebar.style.overflow = 'visible';
+                    sidebar.style.zIndex = 'auto';
+                    mainContent.style.marginLeft = '0';
+                }
+            }
+
+            applyStickySidebar();
+            window.addEventListener('resize', applyStickySidebar);
+        });
+    </script>
+</body>
+</html> 

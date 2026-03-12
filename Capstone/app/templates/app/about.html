@@ -1,0 +1,27 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/about.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <h1>About Us</h1>
+    <p>Welcome to <strong>CVSU-B Tracking System</strong>, a dedicated platform aimed at supporting students who experience mental health challenges. Our mission is to provide a safe space, resources, and guidance to help students navigate their mental well-being.</p>
+
+    <div class="about-content">
+        <h2>Our Mission</h2>
+        <p>We aim to raise awareness, provide mental health support, and offer tools to help students cope with stress, anxiety, and other challenges.</p>
+
+        <h2>What We Offer</h2>
+        <ul>
+            <li>Confidential student case tracking</li>
+            <li>Resources for emotional well-being</li>
+            <li>Access to counseling and peer support groups</li>
+        </ul>
+
+
+    </div>
+</div>
+{% endblock %}

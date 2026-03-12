@@ -1,0 +1,137 @@
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/student_sidebar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/schedule_guidance_session.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'app/includes/student_sidebar.html' %}
+
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">Request Guidance Session</h1>
+        <div class="notification-area">
+            <button class="icon-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge"></span>
+            </button>
+            <button class="icon-btn">
+                <i class="fas fa-envelope"></i>
+                <span class="notification-badge"></span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Schedule a Guidance Session</h2>
+        </div>
+        
+        <form method="post" action="">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="id_reason">Reason for Session:</label>
+                <select name="reason" id="id_reason" class="form-control" required>
+                    <option value="" selected>Select a reason</option>
+                    <option value="academic">Academic Concerns</option>
+                    <option value="personal">Personal Issues</option>
+                    <option value="career">Career Planning</option>
+                    <option value="mental_health">Mental Health Support</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+        <div class="info-note">
+    <p style="font-size: 14px; color: #555; margin-top: -10px; margin-bottom: 20px;">
+        <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+        The counselor will assign the date and time of your session after reviewing your request.
+    </p>
+</div> 
+            
+            
+            <div class="form-group">
+                <label class="form-label" for="id_preferred_counselor">Preferred Counselor:</label>
+                <select name="preferred_counselor" id="id_preferred_counselor" class="form-control">
+                    <option value="" selected>No preference</option>
+                    {% for counselor in counselors %}
+                    <option value="{{ counselor.id }}">{{ counselor.user.get_full_name|default:counselor.user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_concern_description">Brief Description of Your Concern:</label>
+                <textarea name="concern_description" id="id_concern_description" class="form-control" rows="4" placeholder="Please provide a brief description of what you'd like to discuss..." required></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    // Initialize datepicker for the date field
+    $(document).ready(function() {
+        $("#id_preferred_date").datepicker({
+            dateFormat: 'dd/mm/yy',
+            minDate: 1, // Allow selection from tomorrow onwards
+            beforeShowDay: function(date) {
+                // Disable weekends
+                var day = date.getDay();
+                return [(day != 0 && day != 6)];
+            }
+        });
+        
+        // Handle sidebar menu interactions
+        $('.menu-item').on('click', function(e) {
+            // Allow navigation - don't prevent default
+            $('.menu-item').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        // Enhanced hover effects for notification buttons
+        $('.icon-btn').on('mouseenter', function() {
+            $(this).find('i').addClass('fa-bounce');
+        }).on('mouseleave', function() {
+            $(this).find('i').removeClass('fa-bounce');
+        });
+        
+        // Form validation with visual feedback
+        $('.form-control').on('focus', function() {
+            $(this).parent().addClass('focused');
+        }).on('blur', function() {
+            $(this).parent().removeClass('focused');
+            if ($(this).val() !== '') {
+                $(this).parent().addClass('filled');
+            } else {
+                $(this).parent().removeClass('filled');
+            }
+        });
+        
+        // Handle responsive behavior
+        function handleResponsive() {
+            if (window.innerWidth <= 768) {
+                $(".sidebar").addClass("compact");
+            } else {
+                $(".sidebar").removeClass("compact");
+            }
+        }
+        
+        // Apply on page load and window resize
+        handleResponsive();
+        $(window).resize(handleResponsive);
+        
+        // Smooth scrolling for better UX
+        $('html').css('scroll-behavior', 'smooth');
+    });
+</script>
+{% endblock %}
+{% endblock %}

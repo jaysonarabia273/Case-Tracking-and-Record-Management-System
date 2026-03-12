@@ -1,0 +1,461 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Settings</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i
+                    class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Profile Information -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Profile Information</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="profile">
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+                        <!-- Profile Picture -->
+                        <div class="form-group">
+                            <label class="form-label">Profile Picture</label>
+                            <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                                <div
+                                    style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; overflow: hidden;">
+                                    {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% elif user.first_name %}
+                                    {{ user.first_name|slice:":1"|upper }}
+                                    {% else %}
+                                    {{ user.username|slice:":1"|upper }}
+                                    {% endif %}
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="file" name="profile_picture" id="profile_picture" class="form-control"
+                                        accept="image/*">
+                                    <div class="form-help">Upload a square image for best results (JPG, PNG)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+                        <!-- First Name -->
+                        <div class="form-group">
+                            <label class="form-label" for="first_name">First Name</label>
+                            <input type="text" name="first_name" id="first_name" class="form-control"
+                                value="{{ user.first_name }}" required>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="form-group">
+                            <label class="form-label" for="last_name">Last Name</label>
+                            <input type="text" name="last_name" id="last_name" class="form-control"
+                                value="{{ user.last_name }}" required>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email Address</label>
+                            <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}"
+                                required>
+                        </div>
+
+                        <!-- Student ID -->
+                        <div class="form-group">
+                            <label class="form-label" for="student_id">Student ID</label>
+                            <input type="text" name="student_id" id="student_id" class="form-control"
+                                value="{{ profile.student_number }}" readonly style="background: var(--bg-light);">
+                            <div class="form-help">Student ID cannot be changed</div>
+                        </div>
+
+                        <!-- Course -->
+                        <div class="form-group">
+                            <label class="form-label" for="course">Course</label>
+                            <input type="text" name="course" id="course" class="form-control"
+                                value="{{ user.profile.course|default:'' }}" placeholder="e.g., BSIT">
+                        </div>
+
+                        <!-- Section -->
+                        <div class="form-group">
+                            <label class="form-label" for="section">Section</label>
+                            <input type="text" name="section" id="section" class="form-control"
+                                value="{{ user.profile.section|default:'' }}" placeholder="e.g., 4A">
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: flex-end; gap: var(--spacing-md); margin-top: var(--spacing-xl);">
+                        <button type="reset" class="btn btn-outline">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Change Password</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="password">
+
+                    <div style="max-width: 600px;">
+                        <!-- Current Password -->
+                        <div class="form-group">
+                            <label class="form-label" for="current_password">
+                                Current Password
+                                <span style="color: var(--danger);">*</span>
+                            </label>
+                            <input type="password" name="current_password" id="current_password" class="form-control"
+                                required>
+                        </div>
+
+                        <!-- New Password -->
+                        <div class="form-group">
+                            <label class="form-label" for="new_password">
+                                New Password
+                                <span style="color: var(--danger);">*</span>
+                            </label>
+                            <input type="password" name="new_password" id="new_password" class="form-control" required>
+                            <div class="form-help">Password must be at least 8 characters long</div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group">
+                            <label class="form-label" for="confirm_password">
+                                Confirm New Password
+                                <span style="color: var(--danger);">*</span>
+                            </label>
+                            <input type="password" name="confirm_password" id="confirm_password" class="form-control"
+                                required>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: flex-end; gap: var(--spacing-md); margin-top: var(--spacing-xl);">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i>
+                                Update Password
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Notification Preferences</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="notifications">
+
+                    <div style="max-width: 600px;">
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                            <!-- Email Notifications -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                                        <i class="fas fa-envelope" style="color: var(--primary-green);"></i>
+                                        Email Notifications
+                                    </div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">
+                                        Receive updates about your cases via email
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    {% if profile.email_notifications %}
+                                    <input type="checkbox" name="email_notifications" checked>
+                                    {% else %}
+                                    <input type="checkbox" name="email_notifications">
+                                    {% endif %}
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Case Updates -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                                        <i class="fas fa-bell" style="color: var(--secondary-blue);"></i>
+                                        Case Status Updates
+                                    </div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">
+                                        Get notified when case status changes
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    {% if profile.case_updates %}
+                                    <input type="checkbox" name="case_updates" checked>
+                                    {% else %}
+                                    <input type="checkbox" name="case_updates">
+                                    {% endif %}
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Session Reminders -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                                        <i class="fas fa-calendar-check" style="color: var(--warning);"></i>
+                                        Session Reminders
+                                    </div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">
+                                        Receive reminders for upcoming sessions
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    {% if profile.session_reminders %}
+                                    <input type="checkbox" name="session_reminders" checked>
+                                    {% else %}
+                                    <input type="checkbox" name="session_reminders">
+                                    {% endif %}
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: var(--spacing-xl);">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Preferences
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Account Information</h2>
+            </div>
+            <div class="card-body">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                    <div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">Account Type
+                        </div>
+                        <div style="font-weight: 600; color: var(--text-primary);">Student</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">Username</div>
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ user.username }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">Account Created
+                        </div>
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ user.date_joined|date:"F d, Y" }}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">Last Login</div>
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ user.last_login|date:"F d, Y - g:i
+                            A" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+
+                    toggle.on('click', function () {
+                        $('.sidebar').toggleClass('active');
+                    });
+
+                    $(document).on('click', function (e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+
+            // Password confirmation validation
+            $('form').on('submit', function (e) {
+                if ($(this).find('input[name="form_type"]').val() === 'password') {
+                    const newPass = $('#new_password').val();
+                    const confirmPass = $('#confirm_password').val();
+
+                    if (newPass !== confirmPass) {
+                        e.preventDefault();
+                        alert('New password and confirmation do not match!');
+                        return false;
+                    }
+
+                    if (newPass.length < 8) {
+                        e.preventDefault();
+                        alert('Password must be at least 8 characters long!');
+                        return false;
+                    }
+                }
+            });
+
+            // Profile picture preview
+            $('#profile_picture').on('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = $('<img>').attr('src', e.target.result).css({
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        });
+                        $(this).closest('.form-group').find('div[style*="border-radius: 50%"]').html(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Auto-hide messages
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+
+    <style>
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 56px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-green);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(28px);
+        }
+    </style>
+</body>
+
+</html>

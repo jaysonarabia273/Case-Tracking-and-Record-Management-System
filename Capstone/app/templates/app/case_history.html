@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CVSU-B Case Tracking Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="dashboard-title"><i class="fas fa-tachometer-alt"></i> Case Tracking Dashboard</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'create_case' %}" class="btn btn-success"><i class="fas fa-plus-circle"></i> New Case</a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-file-alt"></i> Total Cases</h5>
+                <h2 class="display-4">{{ total_cases|default:"0" }}</h2>
+                <p class="card-text">Total number of cases in the system</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-check-circle"></i> Resolved</h5>
+                <h2 class="display-4">{{ resolved_cases|default:"0" }}</h2>
+                <p class="card-text">Successfully resolved cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-clock"></i> Pending</h5>
+                <h2 class="display-4">{{ pending_cases|default:"0" }}</h2>
+                <p class="card-text">Cases awaiting resolution</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-danger text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Urgent</h5>
+                <h2 class="display-4">{{ urgent_cases|default:"0" }}</h2>
+                <p class="card-text">High priority cases</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Cases -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0"><i class="fas fa-list"></i> Active Cases</h3>
+        <div class="d-flex">
+            <div class="input-group me-2">
+                <input type="text" class="form-control" placeholder="Search cases...">
+                <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item" href="#">All Cases</a></li>
+                    <li><a class="dropdown-item" href="#">Academic Cases</a></li>
+                    <li><a class="dropdown-item" href="#">Administrative Cases</a></li>
+                    <li><a class="dropdown-item" href="#">Student Concerns</a></li>
+                    <li><a class="dropdown-item" href="#">Faculty Concerns</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Case ID</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Date Filed</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample data, will be replaced with actual data from the database -->
+                    <tr>
+                        <td>CVSU-2025-001</td>
+                        <td>Student Academic Appeal</td>
+                        <td>Academic</td>
+                        <td><span class="badge bg-warning">In Progress</span></td>
+                        <td>Mar 05, 2025</td>
+                        <td><span class="badge bg-danger">High</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'case_detail' 1 %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'edit_case' 1 %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>CVSU-2025-002</td>
+                        <td>Faculty Scheduling Conflict</td>
+                        <td>Administrative</td>
+                        <td><span class="badge bg-info">Assigned</span></td>
+                        <td>Mar 03, 2025</td>
+                        <td><span class="badge bg-warning">Medium</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'case_detail' 2 %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'edit_case' 2 %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>CVSU-2025-003</td>
+                        <td>Dormitory Maintenance Request</td>
+                        <td>Facility</td>
+                        <td><span class="badge bg-success">Resolved</span></td>
+                        <td>Feb 28, 2025</td>
+                        <td><span class="badge bg-success">Low</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'case_detail' 3 %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'edit_case' 3 %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination justify-content-center">
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h3 class="mb-0"><i class="fas fa-history"></i> Recent Activity</h3>
+    </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush activity-list">
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="activity-icon bg-success"><i class="fas fa-check"></i></span>
+                        <span class="ms-3">Case <strong>CVSU-2025-003</strong> marked as resolved</span>
+                    </div>
+                    <small class="text-muted">10 minutes ago</small>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="activity-icon bg-info"><i class="fas fa-user-plus"></i></span>
+                        <span class="ms-3">New handler assigned to case <strong>CVSU-2025-002</strong></span>
+                    </div>
+                    <small class="text-muted">2 hours ago</small>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="activity-icon bg-warning"><i class="fas fa-comment"></i></span>
+                        <span class="ms-3">New comment added to case <strong>CVSU-2025-001</strong></span>
+                    </div>
+                    <small class="text-muted">5 hours ago</small>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="activity-icon bg-primary"><i class="fas fa-plus"></i></span>
+                        <span class="ms-3">New case <strong>CVSU-2025-004</strong> created</span>
+                    </div>
+                    <small class="text-muted">Yesterday</small>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="card-footer">
+        <a href="{% url 'activity_log' %}" class="btn btn-outline-primary btn-sm">View All Activity</a>
+    </div>
+</div>
+{% endblock %}

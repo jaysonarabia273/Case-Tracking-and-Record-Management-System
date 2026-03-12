@@ -1,0 +1,564 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Cases - Archive</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_sidebar.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #0f6e43, #064a2c);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .profile-container {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+
+        .profile-container h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .profile-container p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            border-left-color: #ffd700;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: auto 20px 20px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .logout-btn i {
+            margin-right: 8px;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 0;
+            background-color: white;
+        }
+
+        .header {
+            background: white;
+            padding: 30px 40px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #2c7a2c;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .content-area {
+            padding: 40px;
+        }
+
+        /* TABS */
+        .tabs-container {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: #2c7a2c;
+            background-color: #f8f9fa;
+        }
+
+        .tab.active {
+            color: #2c7a2c;
+            border-bottom-color: #2c7a2c;
+            font-weight: 600;
+        }
+
+        /* TAB CONTENT */
+        .tab-content {
+            display: none;
+            min-height: 400px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .no-cases {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .no-cases-icon {
+            font-size: 80px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-cases h3 {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .no-cases p {
+            color: #999;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        /* CASE CARDS */
+        .case-card {
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .case-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .guidance-session-card {
+            border-left: 4px solid #17a2b8;
+        }
+
+        .session-icon {
+            color: #17a2b8;
+            margin-right: 8px;
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .case-title {
+            font-weight: 600;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .case-date {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .case-detail {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+
+        .case-label {
+            font-weight: 600;
+            margin-right: 6px;
+            color: #555;
+        }
+
+        .case-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .inprogress-tag { background-color: #007bff; }
+        .review-tag { background-color: #17a2b8; }
+        .completed-tag { background-color: #28a745; }
+        .pending-tag { background-color: #ffc107; color: #333; }
+        .canceled-tag { background-color: #dc3545; }
+        .approved-tag { background-color: #28a745; }
+        .resolved-tag { background-color: #6c757d; }
+
+        .case-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-view {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-view:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-feedback {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-feedback:hover {
+            background-color: #1e7e34;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+            
+            .tabs-container {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+{% include 'app/includes/student_sidebar.html' %}
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    <div class="header">
+        <h1>Created Sessions Management</h1>
+    </div>
+
+    <div class="content-area">
+        <!-- TABS -->
+        <div class="tabs-container">
+            <button class="tab active" onclick="showTab('ongoing')">Ongoing Cases</button>
+            <button class="tab" onclick="showTab('pending')">Pending Cases</button>
+            <button class="tab" onclick="showTab('completed')">Completed Cases</button>
+            <button class="tab" onclick="showTab('history')">Case History</button>
+        </div>
+
+        <!-- ONGOING CASES TAB -->
+        <div id="ongoing" class="tab-content active">
+            {% for case in ongoing_cases %}
+                <div class="case-card {% if case.case_type == 'guidance_session' %}guidance-session-card{% endif %}">
+                    <div class="case-header">
+                        <div class="case-title">
+                            {% if case.case_type == 'guidance_session' %}
+                                <i class="fas fa-comments session-icon"></i>
+                            {% endif %}
+                            {{ case.title|default:"Guidance Session" }}
+                        </div>
+                        <div class="case-date">{{ case.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Status:</span>
+                        <span class="tag {% if case.status == 'in_progress' %}inprogress-tag{% elif case.status == 'under_review' %}review-tag{% elif case.status == 'approved' %}approved-tag{% endif %}">
+                            {{ case.status|title|default:"In Progress" }}
+                        </span>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Case ID:</span> #{{ case.id }}
+                    </div>
+                    {% if case.description %}
+                        <div class="case-description">{{ case.description }}</div>
+                    {% endif %}
+                    <div class="case-actions">
+                        <a href="#" class="btn-view">View Details</a>
+                        {% if case.status == 'completed' or case.status == 'resolved' %}
+                            <a href="#" class="btn-feedback">Give Feedback</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-cases">
+                    <div class="no-cases-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>No Ongoing Cases</h3>
+                    <p>You don't have any ongoing cases at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- PENDING CASES TAB -->
+        <div id="pending" class="tab-content">
+            {% for case in pending_cases %}
+                <div class="case-card {% if case.case_type == 'guidance_session' %}guidance-session-card{% endif %}">
+                    <div class="case-header">
+                        <div class="case-title">
+                            {% if case.case_type == 'guidance_session' %}
+                                <i class="fas fa-comments session-icon"></i>
+                            {% endif %}
+                            {{ case.title|default:"Guidance Session" }}
+                        </div>
+                        <div class="case-date">{{ case.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Status:</span>
+                        <span class="tag pending-tag">Pending</span>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Case ID:</span> #{{ case.id }}
+                    </div>
+                    {% if case.description %}
+                        <div class="case-description">{{ case.description }}</div>
+                    {% endif %}
+                    <div class="case-actions">
+                        <a href="#" class="btn-view">View Details</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-cases">
+                    <div class="no-cases-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>No Pending Cases</h3>
+                    <p>You don't have any pending cases at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- COMPLETED CASES TAB -->
+        <div id="completed" class="tab-content">
+            {% for case in completed_cases %}
+                <div class="case-card {% if case.case_type == 'guidance_session' %}guidance-session-card{% endif %}">
+                    <div class="case-header">
+                        <div class="case-title">
+                            {% if case.case_type == 'guidance_session' %}
+                                <i class="fas fa-comments session-icon"></i>
+                            {% endif %}
+                            {{ case.title|default:"Guidance Session" }}
+                        </div>
+                        <div class="case-date">{{ case.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Status:</span>
+                        <span class="tag {% if case.status == 'resolved' %}resolved-tag{% else %}completed-tag{% endif %}">
+                            {{ case.status|title }}
+                        </span>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Case ID:</span> #{{ case.id }}
+                    </div>
+                    {% if case.description %}
+                        <div class="case-description">{{ case.description }}</div>
+                    {% endif %}
+                    <div class="case-actions">
+                        <a href="#" class="btn-view">View Details</a>
+                        <a href="#" class="btn-feedback">Give Feedback</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-cases">
+                    <div class="no-cases-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>No Completed Cases</h3>
+                    <p>You don't have any completed cases yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- CASE HISTORY TAB -->
+        <div id="history" class="tab-content">
+            {% for case in case_history %}
+                <div class="case-card {% if case.case_type == 'guidance_session' %}guidance-session-card{% endif %}">
+                    <div class="case-header">
+                        <div class="case-title">
+                            {% if case.case_type == 'guidance_session' %}
+                                <i class="fas fa-comments session-icon"></i>
+                            {% endif %}
+                            {{ case.title|default:"Guidance Session" }}
+                        </div>
+                        <div class="case-date">{{ case.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Status:</span>
+                        <span class="tag canceled-tag">Canceled</span>
+                    </div>
+                    <div class="case-detail">
+                        <span class="case-label">Case ID:</span> #{{ case.id }}
+                    </div>
+                    {% if case.description %}
+                        <div class="case-description">{{ case.description }}</div>
+                    {% endif %}
+                    <div class="case-actions">
+                        <a href="#" class="btn-view">View Details</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-cases">
+                    <div class="no-cases-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>No Case History</h3>
+                    <p>You don't have any case history at the moment.</p>
+                    <a href="{% url 'schedule_session' %}" class="btn-primary">Request Your First Guidance Session</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Remove active class from all tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Show selected tab content
+    document.getElementById(tabName).classList.add('active');
+
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>

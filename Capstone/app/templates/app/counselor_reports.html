@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <span>Reports</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-chart-bar"></i> Reports & Analytics</h1>
+                    <p class="page-subtitle">View system statistics and trends</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf"></i> Export Narrative Report (PDF)
+                    </button>
+                    <button class="btn btn-primary" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel"></i> Generate Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ total_sessions }}</div>
+                            <div class="stat-card-label">Total Sessions</div>
+                        </div>
+                        <div class="stat-card-icon students">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ total_cases }}</div>
+                            <div class="stat-card-label">Total Cases</div>
+                        </div>
+                        <div class="stat-card-icon in-progress">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ total_students }}</div>
+                            <div class="stat-card-label">Total Students</div>
+                        </div>
+                        <div class="stat-card-icon completed">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ completion_rate }}%</div>
+                            <div class="stat-card-label">Completion Rate</div>
+                        </div>
+                        <div class="stat-card-icon pending">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+                <!-- Sessions Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-chart-line"></i> Sessions by Month</h2>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="sessionsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Cases by Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-chart-pie"></i> Cases by Status</h2>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="casesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reasons for Sessions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-list"></i> Session Reasons Breakdown</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="reasonsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sessions by Month Chart
+        const sessionsCtx = document.getElementById('sessionsChart').getContext('2d');
+        new Chart(sessionsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ month_labels|safe }},
+                datasets: [{
+                    label: 'Sessions',
+                    data: {{ sessions_by_month|safe }},
+                    borderColor: '#0f6e43',
+                    backgroundColor: 'rgba(15, 110, 67, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+            }
+        });
+
+        // Cases by Status Chart
+        const casesCtx = document.getElementById('casesChart').getContext('2d');
+        new Chart(casesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'In Progress', 'Resolved'],
+                datasets: [{
+                    data: {{ cases_by_status|safe }},
+                    backgroundColor: ['#ffc107', '#2b7dab', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+            }
+        });
+
+        // Session Reasons Chart
+        const reasonsCtx = document.getElementById('reasonsChart').getContext('2d');
+        new Chart(reasonsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ reason_labels|safe }},
+                datasets: [{
+                    label: 'Count',
+                    data: {{ reason_counts|safe }},
+                    backgroundColor: '#0f6e43'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+            }
+        });
+
+        function exportReport(format) {
+            window.location.href = `/counselor/reports/export/${format}/`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    
+    <style>
+        .update-form-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .form-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .btn-update, .btn-cancel {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        .btn-update {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+        
+        .case-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .case-info p {
+            margin: 8px 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="update-form-container">
+        <div class="form-header">
+            <h2>Update Case Status</h2>
+        </div>
+        
+        <div class="case-info">
+            <p><strong>Case ID:</strong> #{{ case.id }}</p>
+            <p><strong>Student:</strong> {{ case.student.user.get_full_name|default:case.student.user.username }}</p>
+            <p><strong>Title:</strong> {{ case.title }}</p>
+            <p><strong>Current Status:</strong> {{ case.get_status_display }}</p>
+            <p><strong>Last Updated:</strong> {{ case.updated_at|date:"F d, Y" }}</p>
+        </div>
+        
+        <form method="post" action="">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_status">New Status:</label>
+                <select name="status" id="id_status" class="form-control" required>
+                    {% for value, display in status_choices %}
+                        <option value="{{ value }}" {% if case.status == value %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-update">Update Status</button>
+                <a href="{% url 'dashboard' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

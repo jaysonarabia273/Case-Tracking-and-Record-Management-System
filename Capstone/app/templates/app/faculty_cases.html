@@ -1,0 +1,410 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <style>
+        .cases-container {
+            padding: 20px;
+        }
+        
+        .filter-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn-filter, .btn-reset {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-filter {
+            background-color: #4e73df;
+            color: white;
+            border: none;
+        }
+        
+        .btn-reset {
+            background-color: transparent;
+            border: 1px solid #ddd;
+        }
+        
+        .cases-table-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .cases-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .cases-table th, .cases-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cases-table th {
+            background-color: #f8f9fc;
+            color: #5a5c69;
+            font-weight: 600;
+        }
+        
+        .cases-table tr:hover {
+            background-color: #f8f9ff;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background-color: #f6c23e;
+            color: #fff;
+        }
+        
+        .status-in_progress {
+            background-color: #4e73df;
+            color: #fff;
+        }
+        
+        .status-resolved {
+            background-color: #1cc88a;
+            color: #fff;
+        }
+        
+        .status-under_review {
+            background-color: #e74a3b;
+            color: #fff;
+        }
+        
+        .case-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-case-action {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-view {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .btn-update {
+            background-color: #1cc88a;
+            color: white;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .page-item {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #4e73df;
+            text-decoration: none;
+        }
+        
+        .page-item.active {
+            background-color: #4e73df;
+            color: white;
+            border-color: #4e73df;
+        }
+        
+        .page-item.disabled {
+            color: #ddd;
+            cursor: not-allowed;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Profile Section -->
+        <div class="profile">
+            <img src="{% static 'app/Images/def_prof_pic.png' %}" alt="Profile" class="profile-img" onerror="this.src=''">
+            <h3>{{user_name}}</h3>
+            <p>Faculty Member</p>
+        </div>
+        
+        <!-- Menu Items -->
+        <div class="menu">
+            <a href="{% url 'dashboard' %}" class="menu-item">
+                <span class="icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'faculty_cases' %}" class="menu-item active">
+                <span class="icon">📋</span>
+                <span>My Cases</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">📝</span>
+                <span>Evaluations</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">👥</span>
+                <span>Students</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">📈</span>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </div>
+        
+        <!-- Logout -->
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button class="logout-btn" type="submit">
+                <i>🚪</i> Log Out
+            </button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <h1>Case Management</h1>
+            <div class="user-controls">
+                <div class="notifications">
+                    <span class="icon">🔔</span>
+                    <span class="badge">2</span>
+                </div>
+                <div class="messages">
+                    <span class="icon">✉️</span>
+                    <span class="badge">3</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="cases-container">
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <h3>Filter Cases</h3>
+                <form method="get" action="">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label for="status">Status:</label>
+                            <select id="status" name="status" class="filter-input">
+                                <option value="">All Statuses</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="under_review" {% if request.GET.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="student">Student:</label>
+                            <input type="text" id="student" name="student" class="filter-input" placeholder="Student name" value="{{ request.GET.student }}">
+                        </div>
+                        <div class="filter-item">
+                            <label for="case_id">Case ID:</label>
+                            <input type="text" id="case_id" name="case_id" class="filter-input" placeholder="Case #" value="{{ request.GET.case_id }}">
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label for="date_from">Date From:</label>
+                            <input type="date" id="date_from" name="date_from" class="filter-input" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="filter-item">
+                            <label for="date_to">Date To:</label>
+                            <input type="date" id="date_to" name="date_to" class="filter-input" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="filter-item">
+                            <label for="keywords">Keywords:</label>
+                            <input type="text" id="keywords" name="keywords" class="filter-input" placeholder="Search in title and description" value="{{ request.GET.keywords }}">
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="reset" class="btn-reset">Reset</button>
+                        <button type="submit" class="btn-filter">Apply Filters</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Cases Table -->
+            <div class="cases-table-container">
+                <table class="cases-table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Student</th>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Last Updated</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for case in cases %}
+                        <tr>
+                            <td>#{{ case.id }}</td>
+                            <td>{{ case.student.user.get_full_name|default:case.student.user.username }}</td>
+                            <td>{{ case.title }}</td>
+                            <td>{{ case.created_at|date:"M d, Y" }}</td>
+                            <td>{{ case.updated_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ case.status }}">
+                                    {{ case.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="case-actions">
+                                    <a href="{% url 'view_case_details' case.id %}" class="btn-case-action btn-view">View</a>
+                                    <a href="{% url 'update_case_status' case.id %}" class="btn-case-action btn-update">Update</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">
+                                No cases found matching your criteria.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if cases.has_other_pages %}
+            <div class="pagination">
+                {% if cases.has_previous %}
+                    <a href="?page={{ cases.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-item">&laquo;</a>
+                {% else %}
+                    <span class="page-item disabled">&laquo;</span>
+                {% endif %}
+                
+                {% for i in cases.paginator.page_range %}
+                    {% if cases.number == i %}
+                        <span class="page-item active">{{ i }}</span>
+                    {% else %}
+                        <a href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-item">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if cases.has_next %}
+                    <a href="?page={{ cases.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-item">&raquo;</a>
+                {% else %}
+                    <span class="page-item disabled">&raquo;</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sticky Sidebar Implementation
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        function applyStickySidebar() {
+            if (window.innerWidth > 768) {
+                sidebar.style.position = 'fixed';
+                sidebar.style.top = '0';
+                sidebar.style.left = '0';
+                sidebar.style.height = '100vh';
+                sidebar.style.width = '280px';
+                sidebar.style.overflow = 'auto';
+                sidebar.style.zIndex = '1000';
+                
+                mainContent.style.marginLeft = '280px';
+            } else {
+                sidebar.style.position = 'relative';
+                sidebar.style.height = 'auto';
+                sidebar.style.width = '100%';
+                sidebar.style.overflow = 'visible';
+                sidebar.style.zIndex = 'auto';
+                
+                mainContent.style.marginLeft = '0';
+            }
+        }
+        
+        // Apply on page load and resize
+        applyStickySidebar();
+        window.addEventListener('resize', applyStickySidebar);
+        
+        // Reset button functionality
+        document.querySelector('.btn-reset').addEventListener('click', function(e) {
+            // Don't submit the form
+            e.preventDefault();
+            
+            // Reset all inputs
+            document.querySelectorAll('.filter-input').forEach(input => {
+                input.value = '';
+            });
+            
+            // For select elements
+            document.querySelectorAll('select.filter-input').forEach(select => {
+                select.selectedIndex = 0;
+            });
+        });
+    });
+</script>
+{% endblock %}

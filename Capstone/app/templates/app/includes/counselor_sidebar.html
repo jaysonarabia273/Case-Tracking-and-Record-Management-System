@@ -1,0 +1,110 @@
+{% load static %}
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <img src="{% static 'app/Images/cvsu_logo.png' %}" alt="CVSU Logo">
+            <div class="sidebar-logo-text">
+                <h2>CVSU</h2>
+                <p>Case Tracking</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="sidebar-user-avatar">
+            {{ user_name|slice:":1"|upper }}
+        </div>
+        <div class="sidebar-user-info">
+            <h4>{{ user_name }}</h4>
+            <p>Counselor</p>
+        </div>
+        {% include 'app/includes/notification_bell.html' %}
+    </div>
+
+    <ul class="sidebar-nav">
+        <li>
+            <a href="{% url 'counselor_dashboard' %}" class="{% if request.resolver_match.url_name == 'counselor_dashboard' %}active{% endif %}">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_sessions' %}" class="{% if 'sessions' in request.path %}active{% endif %}">
+                <i class="fas fa-comments"></i>
+                <span>Sessions</span>
+                {% if pending_sessions_count > 0 %}
+                <span class="sidebar-badge">{{ pending_sessions_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_cases' %}" class="{% if 'cases' in request.path and 'cases' != request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-folder-open"></i>
+                <span>Cases</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_students' %}" class="{% if 'students' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Students</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_calendar' %}" class="{% if 'calendar' in request.path %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_reports' %}" class="{% if 'reports' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'counselor_settings' %}" class="{% if 'settings' in request.path %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-logout">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- Mobile Toggle Button -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('active');
+}
+
+// Close sidebar on mobile when clicking outside
+document.addEventListener('click', function(event) {
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.querySelector('.mobile-toggle');
+    
+    if (window.innerWidth <= 1024) {
+        if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    }
+});
+</script>

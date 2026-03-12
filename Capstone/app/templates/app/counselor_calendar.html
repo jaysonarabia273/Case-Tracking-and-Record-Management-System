@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <span>Calendar</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Schedule Calendar</h1>
+                    <p class="page-subtitle">View and manage session schedules</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline" onclick="calendarToday()">
+                        <i class="fas fa-dot-circle"></i> Today
+                    </button>
+                    <button class="btn btn-outline" onclick="switchView('dayGridMonth')">
+                        <i class="fas fa-th"></i> This Month
+                    </button>
+                    <button class="btn btn-primary" onclick="switchView('timeGridDay')">
+                        <i class="fas fa-calendar-day"></i> Day View
+                    </button>
+                    <button class="btn btn-outline" onclick="calendarReload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-calendar-week"></i> Upcoming Sessions</h2>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <button class="btn btn-sm btn-outline" onclick="changeView('week')">Week</button>
+                        <button class="btn btn-sm btn-outline" onclick="changeView('month')">Month</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_sessions %}
+                    <div style="display: grid; gap: var(--spacing-md);">
+                        {% for session in upcoming_sessions %}
+                        <div style="border-left: 4px solid var(--status-in-progress); padding: var(--spacing-md); background: var(--bg-light); border-radius: var(--border-radius-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0 0 var(--spacing-xs) 0;">{{ session.student.user.get_full_name }}</h4>
+                                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">{{ session.get_reason_display }}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 600; color: var(--primary-green);">
+                                        {{ session.scheduled_date|date:"D, M d" }}
+                                    </div>
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                        {% if session.scheduled_time %}{{ session.scheduled_time|time:"g:i A" }}{% else %}Time TBD{% endif %}
+                                    </div>
+                                </div>
+                                <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-calendar-check"></i></div>
+                        <h3 class="empty-state-title">No Upcoming Sessions</h3>
+                        <p class="empty-state-text">Your schedule is clear.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-clock"></i> Today's Schedule</h2>
+                </div>
+                <div class="card-body">
+                    {% if today_sessions %}
+                    <div style="display: grid; gap: var(--spacing-sm);">
+                        {% for session in today_sessions %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: var(--bg-light); border-radius: var(--border-radius-md);">
+                            <div>
+                                <span style="font-weight: 600;">{{ session.scheduled_time|time:"g:i A" }}</span> -
+                                {{ session.student.user.get_full_name }}
+                            </div>
+                            <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-outline">View</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No sessions scheduled for today.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script>
+        window._calendar = null;
+        function switchView(viewName) {
+            if (window._calendar) { window._calendar.changeView(viewName); }
+        }
+        function calendarToday() {
+            if (window._calendar) { window._calendar.today(); }
+        }
+        function calendarReload() {
+            if (window._calendar) { window._calendar.refetchEvents(); }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.createElement('div');
+            calendarEl.id = 'calendar';
+            document.querySelector('.container').appendChild(calendarEl);
+
+            window._calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridDay'
+                },
+                dayMaxEvents: true,
+                events: {
+                    url: '{% url "calendar_events" %}',
+                    method: 'GET'
+                },
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                eventTimeFormat: { hour: 'numeric', minute: '2-digit' },
+            });
+            window._calendar.render();
+        });
+    </script>
+</body>
+</html>

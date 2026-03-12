@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conduct Hearing - Student Evaluation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .logo h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .hearing-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .hearing-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .hearing-info {
+            padding: 25px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        .form-title {
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-scheduled {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>Evaluation System</h2>
+                <p>Faculty Dashboard</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{% url 'evaluation_dashboard' %}" class="nav-link">
+                        <i>📊</i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'create_evaluation' %}" class="nav-link">
+                        <i>📝</i> New Evaluation
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i>⚖️</i> Conduct Hearing
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}" class="nav-link">
+                        <i>🏠</i> Main Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer; color: inherit; font: inherit;">
+                            <i>🚪</i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Conduct Hearing</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'evaluation_dashboard' %}">Dashboard</a> &gt; 
+                    <a href="{% url 'evaluation_detail' hearing.evaluation.id %}">Evaluation #{{ hearing.evaluation.id }}</a> &gt; 
+                    Conduct Hearing
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Hearing Information Card -->
+            <div class="hearing-card">
+                <div class="hearing-header">
+                    <h2>{{ hearing.get_hearing_level_display }} Details</h2>
+                </div>
+                <div class="hearing-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Student</div>
+                            <div class="info-value">{{ hearing.evaluation.student.user.get_full_name|default:hearing.evaluation.student.user.username }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Offense Type</div>
+                            <div class="info-value">{{ hearing.evaluation.offense_type.name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Scheduled Date</div>
+                            <div class="info-value">{{ hearing.scheduled_date|date:"F d, Y g:i A" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Conducted By</div>
+                            <div class="info-value">{{ hearing.conducted_by.user.get_full_name|default:hearing.conducted_by.user.username }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="status-badge status-{{ hearing.status }}">{{ hearing.get_status_display }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Hearing Level</div>
+                            <div class="info-value">{{ hearing.hearing_level }} of 4</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item" style="margin-top: 20px;">
+                        <div class="info-label">Incident Description</div>
+                        <div class="info-value">{{ hearing.evaluation.incident_description }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hearing Decision Form -->
+            <div class="form-container">
+                <h2 class="form-title">Record Hearing Decision</h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.hearing_notes.id_for_label }}" class="form-label">Hearing Notes</label>
+                        {{ form.hearing_notes }}
+                        <small class="form-text">Record detailed notes about the hearing proceedings</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.student_statement.id_for_label }}" class="form-label">Student Statement</label>
+                        {{ form.student_statement }}
+                        <small class="form-text">Record the student's statement or explanation</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.decision.id_for_label }}" class="form-label">Decision *</label>
+                        {{ form.decision }}
+                        <small class="form-text">Select the appropriate decision for this hearing</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.decision_details.id_for_label }}" class="form-label">Decision Details</label>
+                        {{ form.decision_details }}
+                        <small class="form-text">Provide detailed explanation of the decision and any conditions</small>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Complete Hearing</button>
+                        <a href="{% url 'evaluation_detail' hearing.evaluation.id %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Add form field styling
+        document.addEventListener('DOMContentLoaded', function() {
+            const formControls = document.querySelectorAll('select, textarea');
+            formControls.forEach(control => {
+                control.classList.add('form-control');
+            });
+
+            // Add confirmation for form submission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const decision = document.querySelector('select[name="decision"]').value;
+                if (!decision) {
+                    e.preventDefault();
+                    alert('Please select a decision before submitting.');
+                    return;
+                }
+                
+                if (!confirm('Are you sure you want to complete this hearing with the selected decision?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

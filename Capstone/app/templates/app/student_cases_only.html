@@ -1,0 +1,687 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cases - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">My Cases</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>My Cases</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Cases</div>
+                    <div class="stat-value">{{ total_count }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">{{ pending_count }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card secondary">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Ongoing</div>
+                    <div class="stat-value">{{ ongoing_count }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value">{{ completed_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-md" style="flex-wrap: wrap; justify-content: center;">
+                    <button class="btn btn-outline" onclick="filterTable('all')">
+                        <i class="fas fa-list"></i> All Cases
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('pending')">
+                        <i class="fas fa-hourglass-half"></i> Pending
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('ongoing')">
+                        <i class="fas fa-spinner"></i> Ongoing
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('completed')">
+                        <i class="fas fa-check-circle"></i> Completed
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases List -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">My Formal Cases</h2>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <select class="form-control" style="width: auto; font-size: 14px;" onchange="sortCases(this.value)">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="status">By Status</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if cases %}
+                <div class="table-container">
+                    <table class="data-table" id="casesTable">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Counselor</th>
+                                <th>Sessions</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in cases %}
+                            <tr data-status="{{ case.status }}" class="case-row">
+                                <td>
+                                    <strong style="color: var(--primary-green); font-size: 14px;">#{{ case.id }}</strong>
+                                </td>
+                                <td style="max-width: 300px;">
+                                    <div style="font-weight: 600; margin-bottom: 4px;">
+                                        <a href="{% url 'case_detail_view' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                            {{ case.title }}
+                                        </a>
+                                    </div>
+                                    <div style="font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ case.description|truncatewords:15 }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if case.status == 'pending' %}
+                                    <span class="badge badge-pending">Pending</span>
+                                    {% elif case.status == 'in_progress' or case.status == 'under_review' %}
+                                    <span class="badge badge-in-progress">Ongoing</span>
+                                    {% elif case.status == 'resolved' or case.status == 'completed' %}
+                                    <span class="badge badge-completed">Completed</span>
+                                    {% elif case.status == 'rejected' or case.status == 'cancelled' %}
+                                    <span class="badge badge-rejected">{{ case.status|title }}</span>
+                                    {% else %}
+                                    <span class="badge badge-draft">{{ case.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if case.counselor %}
+                                        {{ case.counselor.user.first_name|default:case.counselor.user.username }}
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-comments"></i> {{ case.session_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>{{ case.created_at|date:"M d, Y" }}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">{{ case.created_at|date:"g:i A" }}</div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="openCaseModal({{ case.id }}, '{{ case.title|escapejs }}', '{{ case.description|escapejs }}', '{{ case.status }}', '{{ case.counselor.user.first_name|default:"Unassigned"|escapejs }}', {{ case.session_count }}, [{% for session in case.sessions.all %}{id: {{ session.id }}, reason: '{{ session.get_reason_display|escapejs }}', date: '{{ session.created_at|date:"M d, Y" }}', status: '{{ session.status }}'}{% if not forloop.last %},{% endif %}{% endfor %}])">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="empty-state-title">No Formal Cases</h3>
+                    <p class="empty-state-text">
+                        You don't have any formal cases yet. Cases are created by counselors when an issue requires formal tracking and follow-up.
+                    </p>
+                    <div style="display: flex; gap: var(--spacing-md); justify-content: center;">
+                        <a href="{% url 'student_sessions_only' %}" class="btn btn-outline">
+                            <i class="fas fa-comments"></i>
+                            View My Sessions
+                        </a>
+                        <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus"></i>
+                            Request Session
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Case Detail Modal -->
+    <div id="caseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Case Details</h2>
+                <button class="modal-close" onclick="closeCaseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- View Mode -->
+                <div id="view-mode" class="detail-grid">
+                    <div class="detail-section">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Case Information
+                        </h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Title:</span>
+                            <span class="detail-value" id="modal-title"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="modal-status-badge"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Counselor:</span>
+                            <span class="detail-value" id="modal-counselor"></span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section full-width">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-align-left"></i>
+                            Description
+                        </h3>
+                        <div class="detail-description" id="modal-description"></div>
+                    </div>
+                    
+                    <div class="detail-section full-width" id="linked-sessions-section">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-comments"></i>
+                            Related Sessions (<span id="session-count">0</span>)
+                        </h3>
+                        <div id="sessions-list" style="display: flex; flex-direction: column; gap: var(--spacing-sm);"></div>
+                        
+                        <div style="margin-top: var(--spacing-md); text-align: center;">
+                            <a href="{% url 'schedule_session' %}?case_id=" id="request-session-link" class="btn btn-outline">
+                                <i class="fas fa-plus"></i>
+                                Request Session for This Case
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- View Mode Buttons (Cases - Read Only for Students) -->
+                <div id="view-buttons" style="display: flex; gap: var(--spacing-sm); width: 100%; justify-content: flex-end;">
+                    <button class="btn btn-outline" onclick="closeCaseModal()">
+                        <i class="fas fa-times"></i>
+                        Close
+                    </button>
+                </div>
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+                    
+                    toggle.on('click', function() {
+                        $('.sidebar').toggleClass('active');
+                    });
+                    
+                    $(document).on('click', function(e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+            
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+            
+            // Auto-hide messages
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+        
+        // Modal functions
+        let currentCaseId = null;
+        let currentCaseData = {};
+        
+        function openCaseModal(caseId, title, description, status, counselor, sessionCount, sessions) {
+            currentCaseId = caseId;
+            currentCaseData = { title, description, status, counselor };
+            
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-description').textContent = description || 'No description provided.';
+            document.getElementById('modal-counselor').textContent = counselor || 'Not assigned';
+            
+            // Set status badge
+            let statusBadge = '';
+            if (status === 'pending') {
+                statusBadge = '<span class="badge badge-pending">Pending</span>';
+            } else if (status === 'in_progress' || status === 'under_review' || status === 'approved') {
+                statusBadge = '<span class="badge badge-in-progress">Ongoing</span>';
+            } else if (status === 'resolved' || status === 'completed') {
+                statusBadge = '<span class="badge badge-completed">Completed</span>';
+            } else if (status === 'rejected' || status === 'cancelled' || status === 'canceled') {
+                statusBadge = '<span class="badge badge-rejected">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span>';
+            } else {
+                statusBadge = '<span class="badge badge-draft">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span>';
+            }
+            document.getElementById('modal-status-badge').innerHTML = statusBadge;
+            
+            // Update the "Request Session" link with case ID
+            const requestSessionLink = document.getElementById('request-session-link');
+            if (requestSessionLink) {
+                requestSessionLink.href = '{% url "schedule_session" %}?case_id=' + caseId;
+            }
+            
+            // Display linked sessions
+            document.getElementById('session-count').textContent = sessionCount || 0;
+            const sessionsList = document.getElementById('sessions-list');
+            sessionsList.innerHTML = '';
+            
+            if (sessions && sessions.length > 0) {
+                sessions.forEach(session => {
+                    const sessionItem = document.createElement('div');
+                    sessionItem.style.cssText = 'padding: var(--spacing-md); background: var(--bg-light); border-radius: var(--border-radius-sm); border-left: 3px solid var(--secondary-blue);';
+                    
+                    let sessionStatusBadge = '';
+                    if (session.status === 'pending') {
+                        sessionStatusBadge = '<span class="badge badge-pending">Pending</span>';
+                    } else if (session.status === 'approved' || session.status === 'in_progress') {
+                        sessionStatusBadge = '<span class="badge badge-in-progress">Scheduled</span>';
+                    } else if (session.status === 'completed') {
+                        sessionStatusBadge = '<span class="badge badge-completed">Completed</span>';
+                    } else {
+                        sessionStatusBadge = '<span class="badge badge-draft">' + session.status + '</span>';
+                    }
+                    
+                    sessionItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: var(--secondary-blue);">Session #${session.id}</strong>
+                            ${sessionStatusBadge}
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">
+                            <i class="fas fa-tag"></i> ${session.reason}
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                            <i class="fas fa-calendar"></i> ${session.date}
+                        </div>
+                    `;
+                    sessionsList.appendChild(sessionItem);
+                });
+            } else {
+                sessionsList.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align: center; padding: var(--spacing-md);">No sessions linked to this case yet.</p>';
+            }
+            
+            // Show modal
+            document.getElementById('caseModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        
+        function closeCaseModal() {
+            document.getElementById('caseModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('caseModal');
+            if (event.target === modal) {
+                closeCaseModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeCaseModal();
+            }
+        });
+        
+        // Filter table by status
+        function filterTable(filterType) {
+            const rows = document.querySelectorAll('#casesTable tbody tr.case-row');
+            
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                
+                if (filterType === 'all') {
+                    row.style.display = '';
+                } else if (filterType === 'pending' && status === 'pending') {
+                    row.style.display = '';
+                } else if (filterType === 'ongoing' && (status === 'in_progress' || status === 'under_review' || status === 'approved')) {
+                    row.style.display = '';
+                } else if (filterType === 'completed' && (status === 'resolved' || status === 'completed')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update button styles
+            document.querySelectorAll('.card .btn-outline').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            event.target.classList.remove('btn-outline');
+            event.target.classList.add('btn-primary');
+        }
+        
+        // Sort cases function
+        function sortCases(sortType) {
+            const tbody = document.querySelector('#casesTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                if (sortType === 'status') {
+                    return a.dataset.status.localeCompare(b.dataset.status);
+                }
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+    
+    <style>
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .modal-content {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-white);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+        
+        .modal-close:hover {
+            background: var(--danger);
+            color: var(--text-white);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: var(--spacing-lg);
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .modal-body::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+        
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+        
+        .detail-grid {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+        
+        .detail-section {
+            background: var(--bg-light);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .detail-section.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .detail-section-title i {
+            color: var(--primary-green);
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .detail-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .detail-description {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: var(--bg-white);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+        
+        /* Mobile responsiveness for modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: var(--spacing-md);
+            }
+            
+            .modal-title {
+                font-size: 18px;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

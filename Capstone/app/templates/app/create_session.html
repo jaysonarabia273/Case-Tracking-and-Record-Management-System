@@ -1,0 +1,623 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Session</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <style>
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2d8659;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-btn, .message-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .message-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .notification-btn:hover, .message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            color: #2d8659;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2d8659;
+            box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1);
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: #2d8659;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .offense-description {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .offense-description.show {
+            display: block;
+        }
+
+        .custom-offense-container {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .custom-offense-container.show {
+            display: block;
+        }
+
+        .submit-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f3f4;
+        }
+
+        .submit-btn {
+            background: #2d8659;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #236b47;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 134, 89, 0.3);
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        /* Guidance Section Styles */
+        .guidance-section {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .guidance-section h3 {
+            color: #2d8659;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                order: 2;
+            }
+
+            .main-content {
+                margin-left: 0;
+                order: 1;
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Profile Section -->
+            <div class="profile">
+                <div class="profile-img">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3>{{user_name}}</h3>
+                <p>Faculty Member</p>
+            </div>
+            
+            <!-- Menu Items -->
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'student_case' %}" class="menu-item">
+                    <span class="icon">📋</span>
+                    <span>Student's Cases</span>
+                </a>
+                <a href="{% url 'evaluation' %}" class="menu-item">
+                    <span class="icon">📝</span>
+                    <span>Evaluations</span>
+                </a>
+                <a href="{% url 'student_list' %}" class="menu-item">
+                    <span class="icon">👥</span>
+                    <span>Students</span>
+                </a>
+
+                <a href="{% url 'create_session' %}" class="menu-item active">
+                    <span class="icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+
+                 <a href="{% url 'session_created' %}" class="menu-item">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+
+                <a href="{% url 'analytics' %}" class="menu-item">
+                    <span class="icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                
+                <a href="#" class="menu-item">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+            
+            <!-- Logout -->
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">
+                    <i>🚪</i> Log Out
+                </button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>Create New Session</h1>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Student Information Form -->
+            <div class="form-container">
+                <h2 class="form-title">Student Information</h2>
+                <form id="sessionForm" method="post" action="{% url 'create_session' %}">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="studentNumber">Student Number</label>
+                            <input type="text" id="studentNumber" name="studentNumber" required placeholder="Enter student number">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="studentName">Student Name</label>
+                            <input type="text" id="studentName" name="studentName" required placeholder="Enter full name">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="studentEmail">Student Email</label>
+                            <input type="email" id="studentEmail" name="studentEmail" required placeholder="Enter email address">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="studentYear">Student Year</label>
+                            <select id="studentYear" name="studentYear" required>
+                                <option value="">Select year level</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                                
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="studentCourse">Student Course</label>
+                            <select id="studentCourse" name="studentCourse" required>
+                                <option value="">Select course</option>
+                                <option value="BSIT">BS Information Technology</option>
+                                <option value="BSCS">BS Computer Science</option>
+                                <option value="BSCE-Civil">BS Criminology</option>
+                                <option value="BSBA">BS Business Administration</option>
+                                <option value="BSED">BS Education</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="studentSection">Section</label>
+                            <input type="text" id="studentSection" name="studentSection" required placeholder="Enter section (e.g., A, B, C)">
+                        </div>
+                    </div>
+                
+                    <!-- Offense Information Form -->
+                    <h2 class="form-title">Offense Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="offenseType">Type of Offense</label>
+                            <select id="offenseType" name="offenseType" required>
+                                <option value="">Select offense type</option>
+                                <option value="academic">Academic Concerns</option>
+                                <option value="personal">Personal Issues</option>
+                                <option value="career">Career Planning</option>
+                                <option value="mental_health">Mental Health Support</option>
+                                <option value="tardiness">Tardiness</option>
+                                <option value="unexcused_absence">Unexcused Absence</option>
+                                <option value="academic_misconduct">Academic Misconduct</option>
+                                <option value="classroom_disruption">Classroom Disruption</option>
+                                <option value="bullying_harassment">Bullying/Harassment</option>
+                                <option value="code_violation">Code of Conduct Violation</option>
+                                <option value="substance_issue">Substance-related Issue</option>
+                                <option value="property_damage">Property Damage</option>
+                                <option value="technology_misuse">Technology Misuse</option>
+                                <option value="dress_code">Dress Code Violation</option>
+                                <option value="insubordination">Insubordination</option>
+                                <option value="fighting">Fighting/Physical Altercation</option>
+                                <option value="other">Other</option>
+                            </select>
+                            
+                            <!-- Offense Descriptions -->
+                            <div id="desc-academic" class="offense-description">
+                                Academic concerns including study difficulties, course selection, academic performance issues, or educational planning.
+                            </div>
+                            <div id="desc-personal" class="offense-description">
+                                Personal issues such as family problems, relationship difficulties, financial concerns, or adjustment issues.
+                            </div>
+                            <div id="desc-career" class="offense-description">
+                                Career planning and guidance including job search assistance, career exploration, or professional development.
+                            </div>
+                            <div id="desc-mental_health" class="offense-description">
+                                Mental health support including stress management, anxiety, depression, or emotional well-being concerns.
+                            </div>
+                            <div id="desc-tardiness" class="offense-description">
+                                Arriving late to class, meetings, or scheduled activities without valid excuse.
+                            </div>
+                            <div id="desc-unexcused_absence" class="offense-description">
+                                Failure to attend classes or required activities without proper notification or valid reason.
+                            </div>
+                            <div id="desc-academic_misconduct" class="offense-description">
+                                Cheating, plagiarism, unauthorized collaboration, or other forms of academic dishonesty.
+                            </div>
+                            <div id="desc-classroom_disruption" class="offense-description">
+                                Behavior that interferes with the learning environment, including excessive talking, making noise, or disruptive actions.
+                            </div>
+                            <div id="desc-bullying_harassment" class="offense-description">
+                                Intimidation, verbal abuse, cyberbullying, or any form of harassment toward other students or staff.
+                            </div>
+                            <div id="desc-code_violation" class="offense-description">
+                                Violation of school policies, student handbook rules, or institutional code of conduct.
+                            </div>
+                            <div id="desc-substance_issue" class="offense-description">
+                                Possession, use, or distribution of alcohol, drugs, or other prohibited substances on campus.
+                            </div>
+                            <div id="desc-property_damage" class="offense-description">
+                                Intentional or negligent damage to school property, equipment, or facilities.
+                            </div>
+                            <div id="desc-technology_misuse" class="offense-description">
+                                Inappropriate use of school computers, internet, or technology resources; accessing prohibited content.
+                            </div>
+                            <div id="desc-dress_code" class="offense-description">
+                                Failure to comply with institutional dress code or uniform requirements.
+                            </div>
+                            <div id="desc-insubordination" class="offense-description">
+                                Refusal to follow instructions from faculty, staff, or school administrators.
+                            </div>
+                            <div id="desc-fighting" class="offense-description">
+                                Physical confrontation, violence, or aggressive behavior toward other individuals.
+                            </div>
+                        </div>
+
+                        <!-- Custom Offense Input (shown when "Other" is selected) -->
+                        <div class="form-group full-width custom-offense-container" id="customOffenseContainer">
+                            <label for="customOffense">Please specify the offense</label>
+                            <input type="text" id="customOffense" name="customOffense" placeholder="Enter the specific offense">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="offenseDetails">Detailed Description</label>
+                            <textarea id="offenseDetails" name="offenseDetails" required placeholder="Provide detailed description of the incident, including date, time, location, and circumstances..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="incidentDate">Set Appointment Date</label>
+                            <input type="date" id="incidentDate" name="incidentDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="incidentTime">Set Appointment Time</label>
+                            <input type="time" id="incidentTime" name="incidentTime" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="severity">Severity Level</label>
+                            <select id="severity" name="severity" required>
+                                <option value="">Select severity</option>
+                                <option value="minor">Minor</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="major">Major</option>
+                                <option value="severe">Severe</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="witnesses">Witnesses (if any)</label>
+                            <input type="text" id="witnesses" name="witnesses" placeholder="Names of witnesses, separated by commas">
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="submit-container">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Create Session</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide offense descriptions
+        document.getElementById('offenseType').addEventListener('change', function() {
+            // Hide all descriptions
+            const descriptions = document.querySelectorAll('.offense-description');
+            descriptions.forEach(desc => desc.classList.remove('show'));
+            
+            // Hide custom offense container
+            document.getElementById('customOffenseContainer').classList.remove('show');
+            
+            const selectedValue = this.value;
+            if (selectedValue) {
+                if (selectedValue === 'other') {
+                    // Show custom offense input
+                    document.getElementById('customOffenseContainer').classList.add('show');
+                } else {
+                    // Show corresponding description
+                    const targetDesc = document.getElementById('desc-' + selectedValue);
+                    if (targetDesc) {
+                        targetDesc.classList.add('show');
+                    }
+                }
+            }
+        });
+
+        // Enhanced form validation and proper submission handling
+        document.getElementById('sessionForm').addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const offenseType = document.getElementById('offenseType').value;
+            const customOffense = document.getElementById('customOffense').value;
+            const offenseDetails = document.getElementById('offenseDetails').value;
+            const reason = document.getElementById('reason').value;
+            const concernDescription = document.getElementById('concernDescription').value;
+            
+            // Check if "other" is selected but no custom offense is provided
+            if (offenseType === 'other' && !customOffense.trim()) {
+                e.preventDefault();
+                alert('Please specify the offense type');
+                document.getElementById('customOffense').focus();
+                return false;
+            }
+            
+            // Additional validation for required fields
+            const requiredFields = ['studentNumber', 'studentName', 'studentEmail', 'studentYear', 'studentCourse', 'studentSection', 'offenseType', 'offenseDetails', 'incidentDate', 'incidentTime', 'severity', 'reason', 'concernDescription'];
+            
+            for (let fieldName of requiredFields) {
+                const field = document.getElementById(fieldName);
+                if (!field.value.trim()) {
+                    e.preventDefault();
+                    alert(`Please fill in the ${field.previousElementSibling.textContent} field`);
+                    field.focus();
+                    return false;
+                }
+            }
+            
+            // Show loading state on submit button
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Session...';
+            
+            // Allow the form to submit normally to Django
+            return true;
+        });
+
+        // Cancel button functionality
+        document.querySelector('.cancel-btn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to cancel? All unsaved data will be lost.')) {
+                document.getElementById('sessionForm').reset();
+                document.querySelectorAll('.offense-description').forEach(desc => desc.classList.remove('show'));
+                document.getElementById('customOffenseContainer').classList.remove('show');
+            }
+        });
+
+        // Auto-dismiss success/error messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

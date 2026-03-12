@@ -1,0 +1,51 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/contact.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="contact-container">
+    <h1>Contact Us</h1>
+    <p>Reach out to us through the following contact details:</p>
+
+    <div class="contact-info">
+        <p><i class="fas fa-map-marker-alt"></i> <strong>Address:</strong> Phase II Soldiers Hills IV, Molino VI, Bacoor, Philippines, 4102</p>
+        <p><i class="fas fa-phone"></i> <strong>Phone:</strong> +63 912 345 6789</p>
+        <p><i class="fas fa-envelope"></i> <strong>Email:</strong> cvsubacoor@gmail.com</p>
+        <p><i class="fas fa-clock"></i> <strong>Office Hours:</strong> Monday - Friday, 8:00 AM - 5:00 PM 
+            <span id="office-status"></span>
+        </p>
+    </div>
+
+    <!-- Google Maps Embed -->
+    <div class="map-container">
+        <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15439.09383703141!2d120.9619625!3d14.413168149999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397ce6a81edb54d%3A0xa2b87a04c0415e32!2sSoldiers%20Hills%20IV%2C%20Molino%20VI%2C%20Bacoor%2C%20Cavite!5e0!3m2!1sen!2sph!4v1709999999999"
+            allowfullscreen="" loading="lazy">
+        </iframe>
+    </div>
+</div>
+
+<!-- JavaScript for Real-Time Office Status -->
+<script>
+    function checkOfficeStatus() {
+        const now = new Date();
+        const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+
+        const officeStatus = document.getElementById("office-status");
+
+        // Office Hours: Monday - Friday, 8:00 AM - 5:00 PM
+        if (day >= 1 && day <= 5 && (hours > 8 || (hours === 8 && minutes >= 0)) && (hours < 17)) {
+            officeStatus.innerHTML = "(<span class='open'>Open Now</span>)";
+        } else {
+            officeStatus.innerHTML = "(<span class='closed'>Closed</span>)";
+        }
+    }
+
+    // Run the function on page load
+    checkOfficeStatus();
+</script>
+{% endblock %}

@@ -1,0 +1,437 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cases - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .cases-theme .page-title i { color: #c2410c; }
+        .cases-theme .page-header {
+            border-top: 4px solid #c2410c;
+            border-radius: 12px;
+            padding-top: 1rem;
+            background: linear-gradient(90deg, rgba(194, 65, 12, 0.10) 0%, rgba(194, 65, 12, 0.02) 100%);
+        }
+        .cases-theme .stat-card { border-left-color: #c2410c; }
+        .cases-theme .tab.active {
+            color: #c2410c;
+            border-bottom: 2px solid #c2410c;
+        }
+        .cases-theme .badge-completed {
+            background-color: rgba(5, 150, 105, 0.16);
+            color: #059669;
+        }
+        .cases-theme .badge-pending {
+            background-color: rgba(194, 65, 12, 0.14);
+            color: #c2410c;
+        }
+    </style>
+</head>
+<body class="cases-theme">
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <span>Cases</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-folder-open"></i>
+                        Case Management
+                    </h1>
+                    <p class="page-subtitle">Manage and track student cases</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <a href="{% url 'counselor_create_case' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New Case
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ active_count }}</div>
+                            <div class="stat-card-label">Open Cases</div>
+                        </div>
+                        <div class="stat-card-icon pending">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ in_progress_count }}</div>
+                            <div class="stat-card-label">In Progress</div>
+                        </div>
+                        <div class="stat-card-icon in-progress">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ overdue_count }}</div>
+                            <div class="stat-card-label">Overdue (&gt;14 days)</div>
+                        </div>
+                        <div class="stat-card-icon completed">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ resolved_count }}</div>
+                            <div class="stat-card-label">Resolved</div>
+                        </div>
+                        <div class="stat-card-icon students">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-hourglass-half"></i> Case Aging (Open Cases)</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="caseAgingChart" height="90"></canvas>
+                </div>
+            </div>
+
+            <!-- Cases Table with Tabs -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list"></i>
+                        All Cases
+                    </h2>
+                    <div class="card-actions">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by student name, case title..." style="width: 300px;">
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div style="padding: 0 var(--spacing-lg);">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('active')">
+                            Active Cases <span class="badge badge-in-progress" style="margin-left: 0.5rem;">{{ active_count }}</span>
+                        </button>
+                        <button class="tab" onclick="switchTab('resolved')">
+                            Resolved <span class="badge badge-completed" style="margin-left: 0.5rem;">{{ resolved_count }}</span>
+                        </button>
+                        <button class="tab" onclick="switchTab('all')">
+                            All Cases
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body no-padding">
+                    <!-- Active Cases Tab -->
+                    <div id="active-tab" class="tab-content active">
+                        {% if active_cases %}
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Counselor</th>
+                                        <th>Status</th>
+                                        <th>Source</th>
+                                        <th>Age (Days)</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for case in active_cases %}
+                                    <tr>
+                                        <td><strong>#{{ case.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600; max-width: 250px;">
+                                                {% if case.record_type == 'session' %}
+                                                <a href="{% url 'counselor_session_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                                {% else %}
+                                                <a href="{% url 'counselor_case_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                                {% endif %}
+                                                    {{ case.title }}
+                                                </a>
+                                            </div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {{ case.description|truncatewords:10 }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ case.student.user.get_full_name }}</div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {% if case.student.student_number %}{{ case.student.student_number }}{% else %}<span style="font-style: italic; color: var(--text-muted);">No ID set</span>{% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if case.counselor %}
+                                            {{ case.counselor.user.get_full_name }}
+                                            {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if case.status == 'pending' %}
+                                            <span class="badge badge-pending">Pending</span>
+                                            {% elif case.status == 'in_progress' %}
+                                            <span class="badge badge-in-progress">In Progress</span>
+                                            {% elif case.status == 'completed' %}
+                                            <span class="badge badge-completed">Resolved</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-draft">{{ case.source_label }}</span>
+                                        </td>
+                                        <td>{{ case.age_days }}</td>
+                                        <td>{{ case.updated_at|date:"M d, Y" }}</td>
+                                        <td class="table-actions">
+                                            {% if case.record_type == 'session' %}
+                                            <a href="{% url 'counselor_session_detail' case.id %}" class="btn btn-sm btn-primary">
+                                            {% else %}
+                                            <a href="{% url 'counselor_case_detail' case.id %}" class="btn btn-sm btn-primary">
+                                            {% endif %}
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-folder-open"></i></div>
+                            <h3 class="empty-state-title">No Active Cases</h3>
+                            <p class="empty-state-text">There are no active cases at the moment.</p>
+                            <a href="{% url 'counselor_create_case' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create New Case
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Resolved Tab -->
+                    <div id="resolved-tab" class="tab-content">
+                        {% if resolved_cases %}
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Counselor</th>
+                                        <th>Source</th>
+                                        <th>Days to Resolve</th>
+                                        <th>Status</th>
+                                        <th>Resolved Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for case in resolved_cases %}
+                                    <tr>
+                                        <td><strong>#{{ case.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600;">
+                                                {% if case.record_type == 'session' %}
+                                                <a href="{% url 'counselor_session_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                                {% else %}
+                                                <a href="{% url 'counselor_case_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                                {% endif %}
+                                                    {{ case.title }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>{{ case.student.user.get_full_name }}</td>
+                                        <td>{% if case.counselor %}{{ case.counselor.user.get_full_name }}{% else %}<span style="color: var(--text-muted); font-style: italic;">Unassigned</span>{% endif %}</td>
+                                        <td><span class="badge badge-draft">{{ case.source_label }}</span></td>
+                                        <td>{{ case.age_days }}</td>
+                                        <td><span class="badge badge-completed">Resolved</span></td>
+                                        <td>{{ case.updated_at|date:"M d, Y" }}</td>
+                                        <td class="table-actions">
+                                            {% if case.record_type == 'session' %}
+                                            <a href="{% url 'counselor_session_detail' case.id %}" class="btn btn-sm btn-outline">
+                                            {% else %}
+                                            <a href="{% url 'counselor_case_detail' case.id %}" class="btn btn-sm btn-outline">
+                                            {% endif %}
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-check-circle"></i></div>
+                            <h3 class="empty-state-title">No Resolved Cases</h3>
+                            <p class="empty-state-text">No cases have been resolved yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- All Cases Tab -->
+                    <div id="all-tab" class="tab-content">
+                        {% if all_cases %}
+                        <div class="table-container">
+                            <table id="allCasesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Counselor</th>
+                                        <th>Source</th>
+                                        <th>Status</th>
+                                        <th>Age (Days)</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for case in all_cases %}
+                                    <tr>
+                                        <td><strong>#{{ case.id }}</strong></td>
+                                        <td>
+                                            {% if case.record_type == 'session' %}
+                                            <a href="{% url 'counselor_session_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                            {% else %}
+                                            <a href="{% url 'counselor_case_detail' case.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                            {% endif %}
+                                                {{ case.title|truncatewords:8 }}
+                                            </a>
+                                        </td>
+                                        <td>{{ case.student.user.get_full_name }}</td>
+                                        <td>
+                                            {% if case.counselor %}
+                                            {{ case.counselor.user.get_full_name }}
+                                            {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge badge-draft">{{ case.source_label }}</span></td>
+                                        <td>
+                                            {% if case.status == 'pending' %}
+                                            <span class="badge badge-pending">Pending</span>
+                                            {% elif case.status == 'in_progress' %}
+                                            <span class="badge badge-in-progress">In Progress</span>
+                                            {% elif case.status == 'completed' %}
+                                            <span class="badge badge-completed">Resolved</span>
+                                            {% elif case.status == 'cancelled' %}
+                                            <span class="badge badge-draft">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ case.age_days }}</td>
+                                        <td>{{ case.created_at|date:"M d, Y" }}</td>
+                                        <td class="table-actions">
+                                            {% if case.record_type == 'session' %}
+                                            <a href="{% url 'counselor_session_detail' case.id %}" class="btn btn-sm btn-primary">
+                                            {% else %}
+                                            <a href="{% url 'counselor_case_detail' case.id %}" class="btn btn-sm btn-primary">
+                                            {% endif %}
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-folder"></i></div>
+                            <h3 class="empty-state-title">No Cases</h3>
+                            <p class="empty-state-text">No cases have been created yet.</p>
+                            <a href="{% url 'counselor_create_case' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Case
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <script>
+        const caseAgingCtx = document.getElementById('caseAgingChart').getContext('2d');
+        new Chart(caseAgingCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ case_aging_labels|safe }},
+                datasets: [{
+                    label: 'Open Cases',
+                    data: {{ case_aging_values|safe }},
+                    backgroundColor: ['#1fb6ff', '#f5b700', '#e63946'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const activeTab = document.querySelector('.tab-content.active');
+            const rows = activeTab.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

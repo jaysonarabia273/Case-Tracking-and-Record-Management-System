@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sessions-theme .page-title i { color: #2563eb; }
+        .sessions-theme .page-header {
+            border-top: 4px solid #2563eb;
+            border-radius: 12px;
+            padding-top: 1rem;
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.10) 0%, rgba(37, 99, 235, 0.02) 100%);
+        }
+        .sessions-theme .stat-card { border-left-color: #2563eb; }
+        .sessions-theme .tab.active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .sessions-theme .badge-in-progress {
+            background-color: rgba(37, 99, 235, 0.16);
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body class="sessions-theme">
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <span>Sessions</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-comments"></i>
+                        Session Management
+                    </h1>
+                    <p class="page-subtitle">Manage student guidance sessions</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="openAddSessionModal()">
+                        <i class="fas fa-plus"></i> Create New Session
+                    </button>
+                    <button class="btn btn-outline" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ pending_count }}</div>
+                            <div class="stat-card-label">Pending Requests</div>
+                        </div>
+                        <div class="stat-card-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ upcoming_week_count }}</div>
+                            <div class="stat-card-label">Upcoming (7 Days)</div>
+                        </div>
+                        <div class="stat-card-icon in-progress">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ group_sessions_count }}</div>
+                            <div class="stat-card-label">Group Sessions</div>
+                        </div>
+                        <div class="stat-card-icon completed">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div>
+                            <div class="stat-card-value">{{ completed_count }}</div>
+                            <div class="stat-card-label">Completed Sessions</div>
+                        </div>
+                        <div class="stat-card-icon students">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessions Table with Tabs -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list"></i>
+                        All Sessions
+                    </h2>
+                    <div class="card-actions">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by student name or ID..." style="width: 300px;">
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div style="padding: 0 var(--spacing-lg);">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('pending')">
+                            Pending <span class="badge badge-pending" style="margin-left: 0.5rem;">{{ pending_count }}</span>
+                        </button>
+                        <button class="tab" onclick="switchTab('scheduled')">
+                            Scheduled <span class="badge badge-in-progress" style="margin-left: 0.5rem;">{{ scheduled_count }}</span>
+                        </button>
+                        <button class="tab" onclick="switchTab('completed')">
+                            Completed <span class="badge badge-completed" style="margin-left: 0.5rem;">{{ completed_count }}</span>
+                        </button>
+                        <button class="tab" onclick="switchTab('all')">
+                            All Sessions
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body no-padding">
+                    <!-- Pending Tab -->
+                    <div id="pending-tab" class="tab-content active">
+                        {% if pending_sessions %}
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Reason</th>
+                                        <th>Concern</th>
+                                        <th>Requested</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in pending_sessions %}
+                                    <tr>
+                                        <td><strong>#{{ session.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ session.student.user.get_full_name }}</div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {{ session.student.student_number }}
+                                            </div>
+                                        </td>
+                                        <td>{{ session.get_reason_display }}</td>
+                                        <td style="max-width: 250px;">
+                                            {{ session.concern_description|truncatewords:10 }}
+                                        </td>
+                                        <td>{{ session.created_at|date:"M d, Y" }}</td>
+                                        <td><span class="badge badge-pending">Pending</span></td>
+                                        <td class="table-actions">
+                                            <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> Review
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-check-circle"></i></div>
+                            <h3 class="empty-state-title">No Pending Requests</h3>
+                            <p class="empty-state-text">All session requests have been reviewed.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Scheduled Tab -->
+                    <div id="scheduled-tab" class="tab-content">
+                        {% if scheduled_sessions %}
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Reason</th>
+                                        <th>Scheduled Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in scheduled_sessions %}
+                                    <tr>
+                                        <td><strong>#{{ session.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ session.student.user.get_full_name }}</div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {{ session.student.student_number }}
+                                            </div>
+                                        </td>
+                                        <td>{{ session.get_reason_display }}</td>
+                                        <td>{{ session.scheduled_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if session.scheduled_time %}
+                                            {{ session.scheduled_time|time:"g:i A" }}
+                                            {% else %}
+                                            <span class="text-muted">TBD</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge badge-in-progress">Scheduled</span></td>
+                                        <td class="table-actions">
+                                            <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-secondary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-calendar"></i></div>
+                            <h3 class="empty-state-title">No Scheduled Sessions</h3>
+                            <p class="empty-state-text">No sessions have been scheduled yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Completed Tab -->
+                    <div id="completed-tab" class="tab-content">
+                        {% if completed_sessions %}
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Reason</th>
+                                        <th>Session Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in completed_sessions %}
+                                    <tr>
+                                        <td><strong>#{{ session.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ session.student.user.get_full_name }}</div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {{ session.student.student_number }}
+                                            </div>
+                                        </td>
+                                        <td>{{ session.get_reason_display }}</td>
+                                        <td>{{ session.scheduled_date|date:"M d, Y" }}</td>
+                                        <td><span class="badge badge-completed">Completed</span></td>
+                                        <td class="table-actions">
+                                            <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-outline">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-folder-open"></i></div>
+                            <h3 class="empty-state-title">No Completed Sessions</h3>
+                            <p class="empty-state-text">No sessions have been completed yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- All Sessions Tab -->
+                    <div id="all-tab" class="tab-content">
+                        {% if all_sessions %}
+                        <div class="table-container">
+                            <table id="allSessionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Reason</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in all_sessions %}
+                                    <tr>
+                                        <td><strong>#{{ session.id }}</strong></td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ session.student.user.get_full_name }}</div>
+                                            <div style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                                {{ session.student.student_number }}
+                                            </div>
+                                        </td>
+                                        <td>{{ session.get_reason_display }}</td>
+                                        <td>
+                                            {% if session.scheduled_date %}
+                                            {{ session.scheduled_date|date:"M d, Y" }}
+                                            {% else %}
+                                            {{ session.created_at|date:"M d, Y" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if session.status == 'pending' %}
+                                            <span class="badge badge-pending">Pending</span>
+                                            {% elif session.status == 'approved' %}
+                                            <span class="badge badge-in-progress">Scheduled</span>
+                                            {% elif session.status == 'completed' %}
+                                            <span class="badge badge-completed">Completed</span>
+                                            {% elif session.status == 'cancelled' %}
+                                            <span class="badge badge-cancelled">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="table-actions">
+                                            <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-comments"></i></div>
+                            <h3 class="empty-state-title">No Sessions</h3>
+                            <p class="empty-state-text">No session requests have been received yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const activeTab = document.querySelector('.tab-content.active');
+            const rows = activeTab.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    </script>
+
+    <!-- Add Session Modal -->
+    {% include "app/includes/add_session_modal.html" %}
+</body>
+</html>

@@ -1,0 +1,1411 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student List - Counselor Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/studentlist.css' %}">
+</head>
+<body>
+<style>
+    /* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.student-status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-active { background-color: #28a745; color: white; }
+.status-pending { background-color: #ffc107; color: black; }
+.status-in-session { background-color: #007bff; color: white; }
+.status-under-review { background-color: #fd7e14; color: white; }
+.status-resolved { background-color: #28a745; color: white; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e8 100%);
+    color: #2d3748;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    background: transparent;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1a5f3f 0%, #0f4c3c 100%);
+    color: white;
+    padding: 2rem 0;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 4px 0 20px rgba(26, 95, 63, 0.15);
+    overflow-y: auto;
+}
+
+.profile {
+    text-align: center;
+    padding: 0 2rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-img {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem;
+    box-shadow: 0 8px 25px rgba(74, 222, 128, 0.3);
+}
+
+.profile h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.profile p {
+    color: #a7f3d0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.menu {
+    padding: 0 1rem;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    color: #d1fae5;
+    text-decoration: none;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(5px);
+}
+
+.menu-item.active {
+    background: linear-gradient(135deg, #0f6e43 0%, #0f6e43 100%);
+    color: white;
+    
+}
+
+.menu-item .icon {
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    width: calc(100% - 2rem);
+    margin: 2rem 1rem 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 2rem;
+    background: transparent;
+}
+
+/* Header Styles */
+.top-header {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-text h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a5f3f;
+    margin-bottom: 0.5rem;
+}
+
+.header-subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.header-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(74, 222, 128, 0.3);
+    min-width: 120px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+    margin-bottom: 2rem;
+}
+
+.search-filter-container {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-box-wrapper {
+    flex: 1;
+    min-width: 300px;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: #22c55e;
+    font-size: 1.1rem;
+    z-index: 2;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #22c55e;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 1rem 1.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f9fafb;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #22c55e;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.filter-clear-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-clear-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+/* Cases Section */
+.cases-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0fdf4;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a5f3f;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: #f0fdf4;
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.view-btn {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #22c55e;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.view-btn.active {
+    background: #22c55e;
+    color: white;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+/* Students Grid */
+.students-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.student-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    border-color: #020202;
+}
+
+.card-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.student-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: white;
+    box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+}
+
+/* Date and Time Visibility - Default hidden */
+/* Default visibility: hidden */
+/* Default hidden */
+.datetime-input {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
+    overflow: hidden;
+}
+
+/* Show the input when the 'show' class is added */
+.datetime-input.show {
+    opacity: 1;
+    max-height: 50px;
+    padding: 10px;
+}
+
+
+
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a5f3f;
+    margin-bottom: 0.5rem;
+}
+
+.student-email {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.student-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.meta-item i {
+    color: #22c55e;
+    width: 14px;
+}
+
+.card-actions {
+    flex-shrink: 0;
+}
+
+.action-btn {
+    background: #f0fdf4;
+    color: #22c55e;
+    border: 1px solid #bbf7d0;
+    padding: 0.75rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.action-btn:hover {
+    background: #22c55e;
+    color: white;
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.cases-section-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a5f3f;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0fdf4;
+}
+
+.section-title i {
+    color: #22c55e;
+    font-size: 1.1rem;
+}
+
+.case-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.case-item:hover {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.case-header {
+    margin-bottom: 1rem;
+}
+
+.case-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.case-id {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    align-self: flex-start;
+}
+
+.session-id {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.case-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.case-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.status-group {
+    display: flex;
+    align-items: center;
+}
+
+.status-dropdown {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-dropdown:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+}
+
+.datetime-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.datetime-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    margin: 0;
+}
+
+.datetime-input.show {
+    opacity: 1;
+    max-height: 50px;
+    margin-top: 0.5rem;
+}
+
+.datetime-input:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+}
+
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.status-loading {
+    color: #22c55e;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empty-cases {
+    text-align: center;
+    padding: 2rem;
+    color: #9ca3af;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px dashed #e5e7eb;
+}
+
+.empty-cases i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: #d1d5db;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #6b7280;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 250px;
+    }
+    
+    .main-content {
+        margin-left: 250px;
+    }
+    
+    .students-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .search-filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box-wrapper {
+        min-width: auto;
+    }
+    
+    .filter-controls {
+        justify-content: center;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .datetime-group {
+        flex-direction: column;
+    }
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #22c55e;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #16a34a;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+    outline: 2px solid #22c55e;
+    outline-offset: 2px;
+}
+
+button:focus,
+select:focus,
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+
+</style>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-img">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3>{{ user_name }}</h3>
+                <p>Faculty Member</p>
+            </div>
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item"><span class="icon">📊</span><span>Dashboard</span></a>
+                <a href="{% url 'student_case' %}" class="menu-item"><span class="icon">📋</span><span>Student's Cases</span></a>
+                <a href="{% url 'evaluation' %}" class="menu-item"><span class="icon">📝</span><span>Evaluations</span></a>
+                <a href="{% url 'student_list' %}" class="menu-item active"><span class="icon">👥</span><span>Students</span></a>
+                <a href="{% url 'create_session' %}" class="menu-item"><span class="icon">➕</span><span>Create Session</span></a>
+                <a href="{% url 'session_created' %}" class="menu-item active"><span class="icon">📅</span><span>Created Cases</span></a>
+                <a href="{% url 'analytics' %}" class="menu-item"><span class="icon">📈</span><span>Analytics</span></a>
+                <a href="#" class="menu-item"><span class="icon">⚙️</span><span>Settings</span></a>
+            </div>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit"><i>🚪</i> Log Out</button>
+            </form>
+        </div>
+        {% csrf_token %}
+        <!-- Main Content -->
+         
+        <div class="main-content">
+            <header class="top-header">
+                <div class="header-content">
+                    <div class="header-text">
+                        <h1>Student Management</h1>
+                        <p class="header-subtitle">Manage student cases and guidance sessions</p>
+                    </div>
+                    <div class="header-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ students|length }}</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+             
+
+            <div class="search-filter-section">
+                <div class="search-filter-container">
+                    <div class="search-box-wrapper">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" placeholder="Search by student name, email, case ID, or case number..." id="searchInput">
+                        </div>
+                    </div>
+                    <div class="filter-controls">
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="has-cases">Has Active Cases</option>
+                            <option value="no-cases">No Active Cases</option>
+                            <option value="has-sessions">Has Guidance Sessions</option>
+                        </select>
+                        <button class="filter-clear-btn" id="clearFilters">
+                            <i class="fas fa-times"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <section class="cases-section">
+                <div class="section-header">
+                    <h2>All Students (<span id="studentCount">{{ students|length }}</span>)</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="students-grid" id="studentsGrid">
+                    {% if students %}
+                        {% for student in students %}
+                        <div class="student-card" data-student-name="{{ student.user.get_full_name|default:student.user.username|lower }}" 
+                             data-student-email="{{ student.user.email|lower }}">
+                            <div class="card-header">
+                                <div class="student-avatar">
+                                    <div class="avatar-circle">
+                                        {{ student.user.get_full_name|default:student.user.username|slice:":2"|upper }}
+                                    </div>
+                                </div>
+                                <div class="student-info">
+                                    <h3 class="student-name">{{ student.user.get_full_name|default:student.user.username }}</h3>
+                                    <div class="student-email">{{ student.user.email }}</div>
+                                    <div class="student-meta">
+                                        <span class="meta-item">
+                                            <i class="fas fa-user-tag"></i>
+                                            {{ student.get_user_type_display }}
+                                        </span>
+                                        <span class="meta-item">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            {{ student.user.date_joined|date:"M d, Y" }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="action-btn" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                                       <!-- In each student card -->
+                            <div class="student-card" data-student-name="..." data-student-email="...">
+                                <!-- Student info -->
+                                <div class="student-status-badge status-active">ACTIVE</div>
+                                
+                                <!-- Cases -->
+                                <div class="case-item" data-case-id="{{ case.id }}" id="case-{{ case.id }}">
+                                     <div class="status-group">
+                                        <select class="case-status-dropdown" data-case-id="{{ case.id }}">
+                                            <option value="pending" {% if case.status == 'pending' %}selected{% endif %}>Pending</option>
+                                            <option value="in_progress" {% if case.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                            <option value="completed" {% if case.status == 'completed' %}selected{% endif %}>Completed</option>
+                                            <option value="cancelled" {% if case.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                                                    <div class="card-body">
+                            <div class="cases-section-card">
+                                {% if student.cases.all %}
+                                    <h4 class="section-title">
+                                        <i class="fas fa-folder-open"></i>
+                                        Active Cases ({{ student.cases.all|length }})
+                                    </h4>
+                                    
+                                    {% for case in student.cases.all %}
+                                    <div class="case-item" data-case-id="{{ case.id }}" id="case-{{ case.id }}">
+                                        <div class="case-header">
+                                            <div class="case-info">
+                                                <span class="case-id">Case #{{ case.id }}</span>
+                                                <span class="case-title">{{ case.title|truncatechars:30 }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="case-controls">
+                                            <div class="status-group">
+                                                <label for="status-{{ case.id }}" class="status-label">Status:</label>
+                                                <select class="case-status-dropdown" 
+                                                        id="status-{{ case.id }}"
+                                                        data-case-id="{{ case.id }}"
+                                                        data-original-status="{{ case.status }}"
+                                                        onchange="updateCaseStatus(this)">
+                                                    <option value="pending" {% if case.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="in_progress" {% if case.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                                    <option value="completed" {% if case.status == 'completed' %}selected{% endif %}>Completed</option>
+                                                    <option value="cancelled" {% if case.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="datetime-group">
+                                                <div class="date-input-wrapper">
+                                                    <label for="date-{{ case.id }}" class="datetime-label">Date:</label>
+                                                    <input type="date" 
+                                                        id="date-{{ case.id }}"
+                                                        class="datetime-input case-scheduled-date" 
+                                                        data-case-id="{{ case.id }}" 
+                                                        data-case-status="{{ case.status }}"
+                                                        value="{% if case.scheduled_date %}{{ case.scheduled_date|date:'Y-m-d' }}{% endif %}"
+                                                        onchange="updateCaseDateTime(this, 'date')">
+                                                </div>
+                                                
+                                                <div class="time-input-wrapper">
+                                                    <label for="time-{{ case.id }}" class="datetime-label">Time:</label>
+                                                    <input type="time" 
+                                                        id="time-{{ case.id }}"
+                                                        class="datetime-input case-scheduled-time" 
+                                                        data-case-id="{{ case.id }}" 
+                                                        data-case-status="{{ case.status }}"
+                                                        value="{% if case.scheduled_time %}{{ case.scheduled_time|time:'H:i' }}{% endif %}"
+                                                        onchange="updateCaseDateTime(this, 'time')">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+
+                                    {% if student.sessions.all %}
+                                        <h4 class="section-title">
+                                            <i class="fas fa-comments"></i>
+                                            Guidance Sessions ({{ student.sessions.all|length }})
+                                        </h4>
+                                        {% for session in student.sessions.all %}
+                                        <div class="case-item">
+                                            <div class="case-header">
+                                                <div class="case-info">
+                                                    <span class="case-id session-id">Session #{{ session.id }}</span>
+                                                    <span class="case-title">{{ session.get_reason_display }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="case-item" data-case-id="{{ case.id }}" id="case-{{ case.id }}"></div>
+                                            <div class="case-controls">
+                                                <div class="status-group">
+                                                    <select class="case-status-dropdown" data-case-id="{{ case.id }}">
+                                                        <option value="pending" {% if session.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                        <option value="in_progress" {% if session.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                                        <option value="completed" {% if case.status == 'completed' %}selected{% endif %}>Completed</option>
+                                                        <option value="cancelled" {% if case.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                    </select>
+                                                </div>
+                                                <div class="datetime-group">
+                                                    <input type="date">
+                                                           <class="datetime-input case-scheduled-date" 
+                                                           data-case-id="{{ session.id }}"
+                                                           value="{% if session.incident_date %}{{ session.incident_date|date:'Y-m-d' }}{% endif %}"
+                                                           class="{% if session.status == 'in_progress' or session.status == 'under_review' %}show{% else %}hide{% endif %}" 
+                                                           {% if session.status == 'in_progress' or session.status == 'under_review' %}required{% endif %}>
+                                                     <input type="time">
+                                                           <class="datetime-input case-scheduled-time" 
+                                                           data-case-id="{{ session.id }}"
+                                                           value="{% if session.incident_time %}{{ session.incident_time|time:'H:i' }}{% endif %}"
+                                                           class="{% if session.status == 'in_progress' or session.status == 'under_review' %}show{% else %}hide{% endif %}" 
+                                                           {% if session.status == 'in_progress' or session.status == 'under_review' %}required{% endif %}>
+                                                </div>
+                                                <div class="loading-indicator">
+                                                    <span class="status-loading" id="loading-{{ session.id }}" style="display: none;">
+                                                        <i class="fas fa-spinner fa-spin"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    {% if not student.cases.all and not student.sessions.all %}
+                                        <div class="empty-cases">
+                                            <i class="fas fa-clipboard"></i>
+                                            <span>No active cases or sessions</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>No Students Found</h3>
+                        <p>No students match your search criteria.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    
+    // Robust case ID extraction function
+    function getCaseId(element) {
+        const methods = [
+            () => element.getAttribute('data-case-id'),
+            () => element.dataset.caseId,
+            () => element.dataset.case_id,
+            () => element.dataset['case-id']
+        ];
+        
+        for (const method of methods) {
+            try {
+                const id = method();
+                if (id && id !== 'undefined' && id !== 'null' && !isNaN(parseInt(id))) {
+                    return parseInt(id);
+                }
+            } catch (e) {
+                continue;
+            }
+        }
+        
+        console.error('Could not extract valid case ID from element:', element);
+        return null;
+    }
+
+    // Toggle date/time inputs visibility
+    function toggleDateTimeInputs(case_id, status) {
+        if (!case_id) {
+            console.error('Invalid case_id in toggleDateTimeInputs');
+            return;
+        }
+        
+        const dateInput = document.querySelector(`.case-scheduled-date[data-case-id="${case_id}"]`);
+        const timeInput = document.querySelector(`.case-scheduled-time[data-case-id="${case_id}"]`);
+        
+        const shouldShow = status === 'in_progress';
+        
+        if (dateInput) {
+            dateInput.style.display = shouldShow ? 'block' : 'none';
+            dateInput.required = shouldShow;
+            const dateContainer = dateInput.closest('.date-time-container') || dateInput.parentElement;
+            if (dateContainer && dateContainer !== dateInput) {
+                dateContainer.style.display = shouldShow ? 'block' : 'none';
+            }
+        }
+        
+        if (timeInput) {
+            timeInput.style.display = shouldShow ? 'block' : 'none';
+            timeInput.required = shouldShow;
+            const timeContainer = timeInput.closest('.date-time-container') || timeInput.parentElement;
+            if (timeContainer && timeContainer !== timeInput) {
+                timeContainer.style.display = shouldShow ? 'block' : 'none';
+            }
+        }
+    }
+
+    // Update UI after status change
+    function updateUIAfterStatusChange(case_id, status) {
+        if (!case_id) {
+            console.error('Invalid case_id in updateUIAfterStatusChange');
+            return;
+        }
+        
+        const statusDisplays = document.querySelectorAll(`[data-case-id="${case_id}"] .status-display`);
+        statusDisplays.forEach(display => {
+            display.textContent = status.replace('_', ' ').toUpperCase();
+            display.className = `status-display status-${status}`;
+        });
+        
+        toggleDateTimeInputs(case_id, status);
+    }
+    
+    // Listen for changes on the status dropdown
+    document.querySelectorAll(".case-status-dropdown").forEach((dropdown, index) => {
+        dropdown.addEventListener("change", function() {
+            const case_id = getCaseId(this);
+            const newStatus = this.value;
+            
+            if (!case_id) {
+                console.error('CASE ID IS INVALID OR NOT FOUND!');
+                console.error('Dropdown HTML:', this.outerHTML);
+                alert('Error: Case ID not found. Please check the HTML structure.');
+                return;
+            }
+            
+            toggleDateTimeInputs(case_id, newStatus);
+            
+            const dateInput = document.querySelector(`.case-scheduled-date[data-case-id="${case_id}"]`);
+            const timeInput = document.querySelector(`.case-scheduled-time[data-case-id="${case_id}"]`);
+
+            const scheduledDate = dateInput ? dateInput.value : '';
+            const scheduledTime = timeInput ? timeInput.value : '';
+            
+            updateCaseStatus(case_id, newStatus, scheduledDate, scheduledTime);
+        });
+    });
+    
+    // Enhanced CSRF token retrieval
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Update case status via API
+    function updateCaseStatus(case_id, status, scheduledDate, scheduledTime) {
+        if (!case_id || isNaN(case_id) || case_id <= 0) {
+            console.error('Invalid case ID, aborting request:', case_id);
+            alert('Error: Invalid case ID. Cannot update status.');
+            return;
+        }
+        
+        const csrfToken = getCookie('csrftoken');
+        const loadingSpan = document.getElementById(`case-loading-${case_id}`);
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found!');
+            alert('CSRF token not found. Please refresh the page.');
+            return;
+        }
+        
+        if (loadingSpan) {
+            loadingSpan.style.display = 'inline-flex';
+        }
+
+        const url = `/update_case_status/${case_id}/`;
+        
+        const requestData = {
+            status: status,
+            scheduled_date: scheduledDate || '',
+            scheduled_time: scheduledTime || '',
+        };
+        
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify(requestData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (loadingSpan) {
+                loadingSpan.style.display = 'none';
+            }
+            
+            if (data.success) {
+                updateUIAfterStatusChange(case_id, status);
+                showNotification('Case status updated successfully!', 'success');
+            } else {
+                console.error("Failed to update case:", data.error);
+                alert("Error updating case: " + (data.error || "Unknown error"));
+                revertDropdownValue(case_id);
+            }
+        })
+        .catch(error => {
+            console.error('Network error:', error.message);
+            
+            if (loadingSpan) {
+                loadingSpan.style.display = 'none';
+            }
+            
+            alert("Network error: " + error.message);
+            revertDropdownValue(case_id);
+        });
+    }
+
+    // Function to revert dropdown value on error
+    function revertDropdownValue(case_id) {
+        if (!case_id) return;
+        
+        const dropdown = document.querySelector(`select[data-case-id="${case_id}"]`);
+        if (dropdown && dropdown.dataset.previousValue) {
+            dropdown.value = dropdown.dataset.previousValue;
+            toggleDateTimeInputs(case_id, dropdown.value);
+        }
+    }
+
+    // Store previous value before change
+    document.querySelectorAll(".case-status-dropdown").forEach(dropdown => {
+        dropdown.addEventListener("focus", function() {
+            this.dataset.previousValue = this.value;
+        });
+    });
+
+    // Function to show notifications
+    function showNotification(message, type = 'info') {
+        let notification = document.getElementById('notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                border-radius: 5px;
+                color: white;
+                z-index: 1000;
+                display: none;
+            `;
+            document.body.appendChild(notification);
+        }
+        
+        const colors = {
+            success: '#28a745',
+            error: '#dc3545',
+            info: '#17a2b8'
+        };
+        
+        notification.style.backgroundColor = colors[type] || colors.info;
+        notification.textContent = message;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
+    // Initialize date/time inputs visibility on page load
+    document.querySelectorAll('.case-scheduled-date').forEach(input => {
+        const case_id = getCaseId(input);
+        if (case_id) {
+            const statusDropdown = document.querySelector(`select[data-case-id="${case_id}"]`);
+            if (statusDropdown) {
+                const status = statusDropdown.value;
+                toggleDateTimeInputs(case_id, status);
+            }
+        }
+    });
+
+    // Handle date input changes
+    document.querySelectorAll(".case-scheduled-date").forEach(dateInput => {
+        dateInput.addEventListener("change", function () {
+            const case_id = getCaseId(this);
+            
+            if (!case_id) {
+                console.error('Invalid case ID in date input change handler');
+                return;
+            }
+            
+            const statusDropdown = document.querySelector(`select[data-case-id="${case_id}"]`);
+            const timeInput = document.querySelector(`input[data-case-id="${case_id}"].case-scheduled-time`);
+            
+            const status = statusDropdown ? statusDropdown.value : 'pending';
+            const scheduledDate = this.value;
+            const scheduledTime = timeInput ? timeInput.value : '';
+
+            updateCaseStatus(case_id, status, scheduledDate, scheduledTime);
+        });
+    });
+
+    // Handle time input changes
+    document.querySelectorAll(".case-scheduled-time").forEach(timeInput => {
+        timeInput.addEventListener("change", function () {
+            const case_id = getCaseId(this);
+            
+            if (!case_id) {
+                console.error('Invalid case ID in time input change handler');
+                return;
+            }
+            
+            const statusDropdown = document.querySelector(`select[data-case-id="${case_id}"]`);
+            const dateInput = document.querySelector(`input[data-case-id="${case_id}"].case-scheduled-date`);
+            
+            const status = statusDropdown ? statusDropdown.value : 'pending';
+            const scheduledDate = dateInput ? dateInput.value : '';
+            const scheduledTime = this.value;
+
+            updateCaseStatus(case_id, status, scheduledDate, scheduledTime);
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const studentCards = document.querySelectorAll('.student-card');
+    const studentCount = document.getElementById('studentCount');
+
+    function filterStudents() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        let visibleCount = 0;
+
+        studentCards.forEach(card => {
+            const studentName = card.dataset.studentName || '';
+            const studentEmail = card.dataset.studentEmail || '';
+            
+            const matchesSearch = studentName.includes(searchTerm) || 
+                                studentEmail.includes(searchTerm);
+            
+            let matchesStatus = true;
+            if (statusValue) {
+                const hasCases = card.querySelectorAll('.case-item').length > 0;
+                const hasSessions = card.querySelectorAll('.session-id').length > 0;
+                
+                switch(statusValue) {
+                    case 'has-cases':
+                        matchesStatus = hasCases;
+                        break;
+                    case 'no-cases':
+                        matchesStatus = !hasCases;
+                        break;
+                    case 'has-sessions':
+                        matchesStatus = hasSessions;
+                        break;
+                }
+            }
+
+            if (matchesSearch && matchesStatus) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (studentCount) {
+            studentCount.textContent = visibleCount;
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterStudents);
+    if (statusFilter) statusFilter.addEventListener('change', filterStudents);
+    
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function() {
+            if (searchInput) searchInput.value = '';
+            if (statusFilter) statusFilter.value = '';
+            filterStudents();
+        });
+    }
+
+    // View toggle functionality
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const studentsGrid = document.getElementById('studentsGrid');
+
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            viewButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const view = this.dataset.view;
+            if (studentsGrid) {
+                if (view === 'list') {
+                    studentsGrid.style.gridTemplateColumns = '1fr';
+                } else {
+                    studentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
+                }
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

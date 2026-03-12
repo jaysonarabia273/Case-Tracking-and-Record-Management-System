@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case #{{ case.id }} - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <a href="{% url 'counselor_cases' %}">Cases</a>
+                <span class="separator">/</span>
+                <span>Case #{{ case.id }}</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-folder-open"></i> Case #{{ case.id }}</h1>
+                    <p class="page-subtitle">{{ case.title }}</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-warning" onclick="openHearingModal({{ case.id }})">
+                        <i class="fas fa-gavel"></i> Schedule Hearing
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddSessionModal({{ case.id }})">
+                        <i class="fas fa-calendar-plus"></i> Add Session
+                    </button>
+                    <button class="btn btn-outline" onclick="updateStatus('in_progress')">
+                        <i class="fas fa-play"></i> Mark In Progress
+                    </button>
+                    <button class="btn btn-success" onclick="updateStatus('resolved')">
+                        <i class="fas fa-check"></i> Mark Resolved
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg);">
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-info-circle"></i> Case Information</h2>
+                            <span class="badge {% if case.status == 'pending' %}badge-pending{% elif case.status == 'in_progress' %}badge-in-progress{% elif case.status == 'resolved' %}badge-completed{% endif %}">
+                                {{ case.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <p style="font-weight: 600;">{{ case.title }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <p style="white-space: pre-wrap;">{{ case.description }}</p>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+                                <div>
+                                    <label class="form-label">Created</label>
+                                    <p>{{ case.created_at|date:"F d, Y" }}</p>
+                                </div>
+                                <div>
+                                    <label class="form-label">Last Updated</label>
+                                    <p>{{ case.updated_at|date:"F d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-comments"></i> Linked Sessions ({{ linked_sessions.count }})</h2>
+                            <button class="btn btn-sm btn-primary" onclick="document.getElementById('linkSessionModal').style.display='flex'">
+                                <i class="fas fa-link"></i> Link Session
+                            </button>
+                        </div>
+                        <div class="card-body no-padding">
+                            {% if linked_sessions %}
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Reason</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for session in linked_sessions %}
+                                        <tr>
+                                            <td><strong>#{{ session.id }}</strong></td>
+                                            <td>{{ session.get_reason_display }}</td>
+                                            <td>
+                                                {% if session.scheduled_date %}
+                                                {{ session.scheduled_date|date:"M d, Y" }}
+                                                {% else %}
+                                                {{ session.created_at|date:"M d, Y" }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.status == 'pending' %}
+                                                <span class="badge badge-pending">Pending</span>
+                                                {% elif session.status == 'approved' %}
+                                                <span class="badge badge-in-progress">Scheduled</span>
+                                                {% elif session.status == 'completed' %}
+                                                <span class="badge badge-completed">Completed</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-outline">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-comments"></i></div>
+                                <h3 class="empty-state-title">No Linked Sessions</h3>
+                                <p class="empty-state-text">No sessions are linked to this case yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hearings Section -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-gavel"></i>
+                                Related Hearings
+                            </h2>
+                        </div>
+                        <div class="card-body no-padding">
+                            {% if case.hearings.all %}
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Hearing #</th>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Date & Time</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for hearing in case.hearings.all %}
+                                        <tr>
+                                            <td><strong>{{ hearing.hearing_number }}</strong></td>
+                                            <td>{{ hearing.title }}</td>
+                                            <td>{{ hearing.get_hearing_type_display }}</td>
+                                            <td>
+                                                {{ hearing.scheduled_date|date:"M d, Y" }}
+                                                {% if hearing.scheduled_time %}
+                                                at {{ hearing.scheduled_time|time:"g:i A" }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if hearing.status == 'scheduled' %}
+                                                <span class="badge badge-in-progress">Scheduled</span>
+                                                {% elif hearing.status == 'in_progress' %}
+                                                <span class="badge badge-warning">In Progress</span>
+                                                {% elif hearing.status == 'completed' %}
+                                                <span class="badge badge-completed">Completed</span>
+                                                {% elif hearing.status == 'postponed' %}
+                                                <span class="badge badge-pending">Postponed</span>
+                                                {% elif hearing.status == 'cancelled' %}
+                                                <span class="badge badge-danger">Cancelled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'counselor_hearing_detail' hearing.id %}" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-gavel"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-gavel"></i></div>
+                                <h3 class="empty-state-title">No Hearings Scheduled</h3>
+                                <p class="empty-state-text">No formal hearings have been scheduled for this case yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-user-graduate"></i> Student</h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="text-align: center; margin-bottom: var(--spacing-md);">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin: 0 auto;">
+                                    {{ case.student.user.get_full_name|slice:":1"|upper }}
+                                </div>
+                            </div>
+                            <h3 style="text-align: center; margin: 0;">{{ case.student.user.get_full_name }}</h3>
+                            <p style="text-align: center; color: var(--text-secondary);">{{ case.student.student_number }}</p>
+                            <div style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-md); margin-top: var(--spacing-md);">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <p>{{ case.student.user.email }}</p>
+                                </div>
+                                <a href="{% url 'counselor_student_profile' case.student.id %}" class="btn btn-outline" style="width: 100%; justify-content: center;">
+                                    <i class="fas fa-user"></i> View Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-user"></i> Counselor</h2>
+                        </div>
+                        <div class="card-body">
+                            {% if case.counselor %}
+                            <p><strong>{{ case.counselor.user.get_full_name }}</strong></p>
+                            <p style="font-size: 0.875rem; color: var(--text-secondary);">{{ case.counselor.user.email }}</p>
+                            {% else %}
+                            <p class="text-muted">Not assigned</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Link Session Modal -->
+    <div id="linkSessionModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background: white; border-radius: var(--border-radius-lg); padding: var(--spacing-xl); max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 var(--spacing-lg) 0;"><i class="fas fa-link"></i> Link Session to Case</h3>
+            <form method="post" action="{% url 'counselor_link_session_to_case' case.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label required">Select Session</label>
+                    <select name="session_id" class="form-control" required>
+                        <option value="">Choose session...</option>
+                        {% for s in available_sessions %}
+                        <option value="{{ s.id }}">#{{ s.id }} - {{ s.get_reason_display }} ({{ s.created_at|date:"M d, Y" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('linkSessionModal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Link Session</button>
+                </div>
+            </form>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(status) {
+            if (confirm('Are you sure you want to update the case status?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "counselor_case_detail" case.id %}';
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'status';
+                statusInput.value = status;
+                form.appendChild(csrf);
+                form.appendChild(statusInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+
+    <!-- Add Session Modal -->
+    {% include "app/includes/add_session_modal.html" %}
+    
+    <!-- Schedule Hearing Modal -->
+    {% include "app/includes/schedule_hearing_modal.html" %}
+</body>
+</html>

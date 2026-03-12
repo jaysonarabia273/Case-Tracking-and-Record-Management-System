@@ -1,0 +1,357 @@
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/case_reports.css' %}">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Profile Section -->
+        <div class="profile">
+            <img src="profile.png" alt="Profile" class="profile-img">
+            <h3>{{user_name}}</h3>
+            <p>Faculty Member</p>
+        </div>
+        
+        <!-- Menu Items -->
+        <div class="menu">
+            <a href="{% url 'dashboard' %}" class="menu-item">
+                <span class="icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">📋</span>
+                <span>My Cases</span>
+            </a>
+            <a href="#" class="menu-item active">
+                <span class="icon">📝</span>
+                <span>Reports</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">👥</span>
+                <span>Students</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">📈</span>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </div>
+        
+        <!-- Logout -->
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button class="logout-btn" type="submit">
+                <i>🚪</i> Log Out
+            </button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <h1>Case Reports</h1>
+            <div class="user-controls">
+                <div class="notifications">
+                    <span class="icon">🔔</span>
+                    <span class="badge">2</span>
+                </div>
+                <div class="messages">
+                    <span class="icon">✉️</span>
+                    <span class="badge">3</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Reports Controls -->
+        <section class="reports-controls">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" action="" id="report-filter-form">
+                        <div class="form-row">
+                            <div class="form-group quarter">
+                                <label for="report-type">Report Type:</label>
+                                <select id="report-type" name="report_type" class="form-control">
+                                    <option value="all" {% if report_type == 'all' %}selected{% endif %}>All Cases</option>
+                                    <option value="status" {% if report_type == 'status' %}selected{% endif %}>By Status</option>
+                                    <option value="date" {% if report_type == 'date' %}selected{% endif %}>By Date Range</option>
+                                    <option value="student" {% if report_type == 'student' %}selected{% endif %}>By Student</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group quarter" id="status-filter" {% if report_type != 'status' %}style="display:none;"{% endif %}>
+                                <label for="status">Status:</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="all" {% if status == 'all' %}selected{% endif %}>All Statuses</option>
+                                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                    <option value="under_review" {% if status == 'under_review' %}selected{% endif %}>Under Review</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group quarter" id="date-from" {% if report_type != 'date' %}style="display:none;"{% endif %}>
+                                <label for="date-start">From:</label>
+                                <input type="text" id="date-start" name="date_start" class="form-control datepicker" value="{{ date_start|default:'' }}">
+                            </div>
+                            
+                            <div class="form-group quarter" id="date-to" {% if report_type != 'date' %}style="display:none;"{% endif %}>
+                                <label for="date-end">To:</label>
+                                <input type="text" id="date-end" name="date_end" class="form-control datepicker" value="{{ date_end|default:'' }}">
+                            </div>
+                            
+                            <div class="form-group half" id="student-filter" {% if report_type != 'student' %}style="display:none;"{% endif %}>
+                                <label for="student">Student:</label>
+                                <select id="student" name="student_id" class="form-control">
+                                    <option value="">Select Student</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.id }}" {% if student_id == student.id %}selected{% endif %}>{{ student.user.get_full_name|default:student.user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Generate Report</button>
+                            <button type="button" id="export-csv" class="btn btn-secondary">Export to CSV</button>
+                            <button type="button" id="print-report" class="btn btn-secondary">Print Report</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Reports Results -->
+        <section class="reports-results">
+            <div class="section-header">
+                <h2>Report Results</h2>
+                <span class="results-count">{{ cases|length }} cases found</span>
+            </div>
+            
+            {% if cases %}
+            <div class="table-responsive">
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Student</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for case in cases %}
+                        <tr>
+                            <td>{{ case.id }}</td>
+                            <td>{{ case.student.user.get_full_name|default:case.student.user.username }}</td>
+                            <td>{{ case.title }}</td>
+                            <td>
+                                <span class="status-badge {{ case.status }}">
+                                    {{ case.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ case.created_at|date:"M d, Y" }}</td>
+                            <td>{{ case.updated_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="#" class="btn-view" data-id="{{ case.id }}">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Case Stats -->
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.total }}</h3>
+                        <p>Total Cases</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.in_progress }}</h3>
+                        <p>In Progress</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👁️</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.under_review }}</h3>
+                        <p>Under Review</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.resolved }}</h3>
+                        <p>Resolved</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">📋</div>
+                <h3>No Cases Found</h3>
+                <p>Try adjusting your filters to see more results.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<!-- Case Details Modal -->
+<div id="case-details-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Case Details</h2>
+        <div id="case-details-content">
+            <!-- Content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize datepickers
+        $(".datepicker").datepicker({
+            dateFormat: 'yy-mm-dd',
+            changeMonth: true,
+            changeYear: true
+        });
+        
+        // Handle report type change
+        $("#report-type").change(function() {
+            var reportType = $(this).val();
+            
+            // Hide all filter sections
+            $("#status-filter, #date-from, #date-to, #student-filter").hide();
+            
+            // Show relevant sections based on report type
+            if (reportType == "status") {
+                $("#status-filter").show();
+            } else if (reportType == "date") {
+                $("#date-from, #date-to").show();
+            } else if (reportType == "student") {
+                $("#student-filter").show();
+            }
+        });
+        
+        // Handle export to CSV
+        $("#export-csv").click(function() {
+            var filterForm = $("#report-filter-form");
+            var formAction = filterForm.attr("action");
+            window.location.href = formAction + "?format=csv&" + filterForm.serialize();
+        });
+        
+        // Handle print report
+        $("#print-report").click(function() {
+            window.print();
+        });
+        
+        // Handle case details modal
+        $(".btn-view").click(function(e) {
+            e.preventDefault();
+            var caseId = $(this).data("id");
+            
+            // Show modal
+            $("#case-details-modal").css("display", "block");
+            
+            // Load case details via AJAX (simulate with placeholder content)
+            $("#case-details-content").html(`
+                <div class="loading">Loading case details...</div>
+            `);
+            
+            // In a real implementation, you would make an AJAX request here
+            // For demo purposes, we'll simulate data loading
+            setTimeout(function() {
+                $("#case-details-content").html(`
+                    <div class="case-details">
+                        <div class="case-header">
+                            <h3>Case #${caseId}</h3>
+                            <span class="status-badge in-progress">In Progress</span>
+                        </div>
+                        
+                        <div class="case-info">
+                            <p><strong>Student:</strong> John Doe</p>
+                            <p><strong>Created:</strong> March 15, 2025</p>
+                            <p><strong>Last Updated:</strong> April 1, 2025</p>
+                        </div>
+                        
+                        <div class="case-description">
+                            <h4>Description</h4>
+                            <p>Student is seeking guidance for career planning and academic path selection. Needs assistance with determining best electives and internship opportunities aligned with their goals.</p>
+                        </div>
+                        
+                        <div class="case-timeline">
+                            <h4>Timeline</h4>
+                            <ul class="timeline">
+                                <li>
+                                    <div class="timeline-date">April 1, 2025</div>
+                                    <div class="timeline-content">
+                                        <h5>Status Update</h5>
+                                        <p>Discussed internship options and provided resources for career planning.</p>
+                                        <span class="timeline-user">by Dr. Smith</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="timeline-date">March 20, 2025</div>
+                                    <div class="timeline-content">
+                                        <h5>Initial Meeting</h5>
+                                        <p>Met with student to discuss career goals and academic interests.</p>
+                                        <span class="timeline-user">by Dr. Smith</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="timeline-date">March 15, 2025</div>
+                                    <div class="timeline-content">
+                                        <h5>Case Created</h5>
+                                        <p>Student submitted request for career guidance.</p>
+                                        <span class="timeline-user">by System</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="case-actions">
+                            <button class="btn-update">Update Case</button>
+                            <button class="btn-close">Close Case</button>
+                            <button class="btn-reassign">Reassign</button>
+                        </div>
+                    </div>
+                `);
+            }, 500);
+        });
+        
+        // Close the modal when clicking the close button
+        $(".close").click(function() {
+            $("#case-details-modal").css("display", "none");
+        });
+        
+        // Close the modal when clicking outside of it
+        $(window).click(function(event) {
+            if ($(event.target).is("#case-details-modal")) {
+                $("#case-details-modal").css("display", "none");
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

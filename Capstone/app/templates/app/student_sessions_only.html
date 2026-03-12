@@ -1,0 +1,485 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sessions - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+<body>
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">My Guidance Sessions</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>My Sessions</span>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Sessions</div>
+                    <div class="stat-value">{{ total_count }}</div>
+                </div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">{{ pending_count }}</div>
+                </div>
+            </div>
+            <div class="stat-card secondary">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Scheduled</div>
+                    <div class="stat-value">{{ ongoing_count }}</div>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value">{{ completed_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">All Guidance Sessions</h2>
+                <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Request New Session
+                </a>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Counselor</th>
+                                <th>Scheduled</th>
+                                <th>Linked Case</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td><strong style="color: var(--secondary-blue);">#{{ session.id }}</strong></td>
+                                <td>
+                                    <div style="font-weight: 600;">
+                                        <a href="{% url 'session_detail_view' session.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                            {{ session.reason }}
+                                        </a>
+                                    </div>
+                                    <div style="font-size: 13px; color: var(--text-secondary);">{{ session.concern_description|truncatewords:10 }}</div>
+                                </td>
+                                <td>
+                                    {% if session.status == 'pending' %}
+                                    <span class="badge badge-pending">Pending</span>
+                                    {% elif session.status == 'approved' or session.status == 'in_progress' %}
+                                    <span class="badge badge-in-progress">Scheduled</span>
+                                    {% elif session.status == 'completed' %}
+                                    <span class="badge badge-completed">Completed</span>
+                                    {% else %}
+                                    <span class="badge badge-draft">{{ session.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.counselor %}
+                                    {{ session.counselor.user.first_name|default:session.counselor.user.username }}
+                                    {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.scheduled_date %}
+                                    <div>{{ session.scheduled_date|date:"M d, Y" }}</div>
+                                    {% if session.scheduled_time %}
+                                    <div style="font-size: 12px; color: var(--text-secondary);">{{ session.scheduled_time }}</div>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted">TBD</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.is_linked %}
+                                    <a href="{% url 'student_cases_only' %}" class="badge badge-info" style="text-decoration: none;">
+                                        <i class="fas fa-link"></i> Case #{{ session.linked_case.id }}
+                                    </a>
+                                    {% else %}
+                                    <span class="badge badge-draft">Standalone</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="openSessionModal({{ session.id }}, '{{ session.reason|escapejs }}', '{{ session.concern_description|escapejs }}', '{{ session.status }}', {% if session.is_linked %}{{ session.linked_case.id }}{% else %}null{% endif %}, '{% if session.scheduled_date %}{{ session.scheduled_date|date:"M d, Y" }}{% endif %}', '{{ session.scheduled_time|default:"" }}', '{% if session.counselor %}{{ session.counselor.user.first_name|escapejs }}{% else %}Not assigned{% endif %}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="fas fa-comments"></i></div>
+                    <h3 class="empty-state-title">No Sessions Yet</h3>
+                    <p class="empty-state-text">You haven't requested any guidance sessions. Request one to talk with a counselor.</p>
+                    <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Request Guidance Session
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Session Detail Modal -->
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Session Details</h2>
+                <button class="modal-close" onclick="closeSessionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- View Mode -->
+                <div id="session-view-mode" class="detail-grid">
+                    <div class="detail-section">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Session Information
+                        </h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Session ID:</span>
+                            <span class="detail-value" id="session-modal-id"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Reason:</span>
+                            <span class="detail-value" id="session-modal-reason"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="session-modal-status"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Counselor:</span>
+                            <span class="detail-value" id="session-modal-counselor"></span>
+                        </div>
+                        <div class="detail-item" id="schedule-display">
+                            <span class="detail-label">Scheduled:</span>
+                            <span class="detail-value" id="session-modal-schedule"></span>
+                        </div>
+                        <div class="detail-item" id="case-link-display">
+                            <span class="detail-label">Linked Case:</span>
+                            <span class="detail-value" id="session-modal-case"></span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section full-width">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-align-left"></i>
+                            Concern Description
+                        </h3>
+                        <div class="detail-description" id="session-modal-description"></div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div id="session-edit-mode" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-session-description">Concern Description</label>
+                        <textarea id="edit-session-description" class="form-control" rows="6"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- View Buttons -->
+                <div id="session-view-buttons" style="display: flex; gap: var(--spacing-sm); width: 100%; justify-content: space-between;">
+                    <div id="session-action-buttons" style="display: flex; gap: var(--spacing-sm);">
+                        <!-- Edit/Cancel shown only if pending and not scheduled -->
+                    </div>
+                    <button class="btn btn-outline" onclick="closeSessionModal()">
+                        <i class="fas fa-times"></i>
+                        Close
+                    </button>
+                </div>
+
+                <!-- Edit Buttons -->
+                <div id="session-edit-buttons" style="display: none; gap: var(--spacing-sm); width: 100%; justify-content: flex-end;">
+                    <button class="btn btn-outline" onclick="exitSessionEditMode()">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="saveSession()">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                $('.main-content').prepend(toggle);
+                toggle.on('click', function() { $('.sidebar').toggleClass('active'); });
+            }
+            setTimeout(function() { $('.alert').fadeOut('slow'); }, 5000);
+        });
+        
+        // Session Modal Functions
+        let currentSessionId = null;
+        let currentSessionData = {};
+        let isEditable = false;
+        
+        function openSessionModal(id, reason, description, status, linkedCaseId, scheduledDate, scheduledTime, counselor) {
+            currentSessionId = id;
+            currentSessionData = { reason, description, status, linkedCaseId, scheduledDate, scheduledTime, counselor };
+            
+            // Check if session is editable (pending AND not scheduled)
+            isEditable = (status === 'pending' && !scheduledDate);
+            
+            // Populate modal
+            document.getElementById('session-modal-id').textContent = '#' + id;
+            document.getElementById('session-modal-reason').textContent = reason;
+            document.getElementById('session-modal-description').textContent = description || 'No description provided.';
+            document.getElementById('session-modal-counselor').textContent = counselor;
+            
+            // Status badge
+            let statusBadge = '';
+            if (status === 'pending') {
+                statusBadge = '<span class="badge badge-pending">Pending</span>';
+            } else if (status === 'approved' || status === 'in_progress') {
+                statusBadge = '<span class="badge badge-in-progress">Scheduled</span>';
+            } else if (status === 'completed') {
+                statusBadge = '<span class="badge badge-completed">Completed</span>';
+            } else {
+                statusBadge = '<span class="badge badge-draft">' + status + '</span>';
+            }
+            document.getElementById('session-modal-status').innerHTML = statusBadge;
+            
+            // Schedule info
+            if (scheduledDate) {
+                document.getElementById('session-modal-schedule').textContent = scheduledDate + (scheduledTime ? ' at ' + scheduledTime : '');
+                document.getElementById('schedule-display').style.display = 'flex';
+            } else {
+                document.getElementById('session-modal-schedule').textContent = 'Not scheduled yet';
+                document.getElementById('schedule-display').style.display = 'flex';
+            }
+            
+            // Linked case
+            if (linkedCaseId) {
+                document.getElementById('session-modal-case').innerHTML = '<a href="{% url "student_cases_only" %}" class="badge badge-info" style="text-decoration: none;"><i class="fas fa-link"></i> Case #' + linkedCaseId + '</a>';
+                document.getElementById('case-link-display').style.display = 'flex';
+            } else {
+                document.getElementById('session-modal-case').innerHTML = '<span class="badge badge-draft">Standalone</span>';
+                document.getElementById('case-link-display').style.display = 'flex';
+            }
+            
+            // Show/hide action buttons based on editability
+            const actionButtons = document.getElementById('session-action-buttons');
+            actionButtons.innerHTML = '';
+            if (isEditable) {
+                actionButtons.innerHTML = `
+                    <button class="btn btn-danger" onclick="confirmCancelSession()">
+                        <i class="fas fa-ban"></i> Cancel Session
+                    </button>
+                    <button class="btn btn-primary" onclick="enterSessionEditMode()">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                `;
+            }
+            
+            // Reset to view mode
+            exitSessionEditMode();
+            
+            // Show modal
+            document.getElementById('sessionModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSessionModal() {
+            document.getElementById('sessionModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        function enterSessionEditMode() {
+            document.getElementById('session-view-mode').style.display = 'none';
+            document.getElementById('session-edit-mode').style.display = 'block';
+            document.getElementById('session-view-buttons').style.display = 'none';
+            document.getElementById('session-edit-buttons').style.display = 'flex';
+            
+            // Populate edit field
+            document.getElementById('edit-session-description').value = currentSessionData.description;
+        }
+        
+        function exitSessionEditMode() {
+            document.getElementById('session-view-mode').style.display = 'grid';
+            document.getElementById('session-edit-mode').style.display = 'none';
+            document.getElementById('session-view-buttons').style.display = 'flex';
+            document.getElementById('session-edit-buttons').style.display = 'none';
+        }
+        
+        function saveSession() {
+            const description = document.getElementById('edit-session-description').value;
+            
+            if (!description) {
+                alert('Please provide a description.');
+                return;
+            }
+            
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const saveBtn = document.querySelector('#session-edit-buttons .btn-primary');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+            
+            fetch('{% url "edit_case" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: new URLSearchParams({
+                    'case_id': currentSessionId,
+                    'title': '',
+                    'description': description
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving.');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        }
+        
+        function confirmCancelSession() {
+            if (confirm('Are you sure you want to cancel this session? This action cannot be undone.')) {
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const cancelBtn = document.querySelector('#session-action-buttons .btn-danger');
+                const originalText = cancelBtn.innerHTML;
+                cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+                cancelBtn.disabled = true;
+                
+                fetch('{% url "cancel_case" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: new URLSearchParams({
+                        'case_id': currentSessionId,
+                        'case_type': 'session'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        closeSessionModal();
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        cancelBtn.innerHTML = originalText;
+                        cancelBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred.');
+                    cancelBtn.innerHTML = originalText;
+                    cancelBtn.disabled = false;
+                });
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeSessionModal();
+            }
+        });
+    </script>
+    <style>
+        .mobile-toggle { display: none; position: fixed; top: 20px; left: 20px; z-index: 999; width: 44px; height: 44px; background: var(--primary-green); color: white; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; box-shadow: var(--shadow-md); }
+        @media (max-width: 768px) { .mobile-toggle { display: flex; align-items: center; justify-content: center; } }
+        
+        /* Session Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 90%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; animation: slideUp 0.3s ease; overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); border-bottom: 1px solid var(--border-color); background: var(--bg-light); }
+        .modal-title { font-size: 22px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        .modal-close { width: 36px; height: 36px; border: none; background: var(--bg-white); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-secondary); transition: all var(--transition-fast); }
+        .modal-close:hover { background: var(--danger); color: var(--text-white); transform: rotate(90deg); }
+        .modal-body { padding: var(--spacing-lg); overflow-y: auto; flex: 1; }
+        .detail-section { background: var(--bg-light); padding: var(--spacing-md); border-radius: var(--border-radius-sm); border-left: 4px solid var(--secondary-blue); }
+        .detail-section.full-width { grid-column: 1 / -1; }
+        .detail-section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-xs); }
+        .detail-section-title i { color: var(--secondary-blue); }
+        .detail-item { display: flex; flex-direction: column; margin-bottom: var(--spacing-sm); }
+        .detail-item:last-child { margin-bottom: 0; }
+        .detail-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; margin-bottom: 4px; }
+        .detail-value { font-size: 15px; color: var(--text-primary); font-weight: 500; }
+        .detail-description { font-size: 15px; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; background: var(--bg-white); padding: var(--spacing-md); border-radius: var(--border-radius-sm); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: var(--spacing-sm); padding: var(--spacing-lg); border-top: 1px solid var(--border-color); background: var(--bg-light); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        @media (max-width: 768px) {
+            .modal-content { width: 95%; max-height: 90vh; }
+            .modal-header, .modal-body, .modal-footer { padding: var(--spacing-md); }
+            .modal-title { font-size: 18px; }
+            .modal-footer { flex-direction: column; }
+            .modal-footer .btn { width: 100%; }
+            #session-view-buttons { flex-direction: column; }
+            #session-action-buttons { flex-direction: column; width: 100%; }
+        }
+    </style>
+</body>
+</html>

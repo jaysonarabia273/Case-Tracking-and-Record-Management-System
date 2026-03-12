@@ -1,0 +1,354 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/evaluation.css' %}">
+    <title>Student Evaluation System</title>
+    <style>
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile">
+            <div class="profile-pic"></div>
+            <h3>{{user_name}}</h3>
+            <p>Faculty Member</p>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'student_case' %}" class="nav-link">
+                    <span class="nav-icon">📁</span>
+                    Student's Cases
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'evaluation' %}" class="nav-link active">
+                    <span class="nav-icon">📝</span>
+                    Evaluations
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'student_list' %}" class="nav-link">
+                    <span class="nav-icon">👥</span>
+                    Students
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'create_session' %}" class="nav-link">
+                    <span class="nav-icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+                 <a href="{% url 'session_created' %}" class="nav-link">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'analytics' %}" class="nav-link">
+                    <span class="nav-icon">📈</span>
+                    Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link logout-btn">
+                    <span class="nav-icon">🚪</span>
+                    Log Out
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Student Evaluation</h1>
+            
+        </div>
+
+        <div class="evaluation-form">
+            <div class="form-header">
+                <h2>Conduct Student Evaluation</h2>
+            </div>
+
+            <form id="evaluationForm" method="post" action="#">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Student Name</label>
+                        <select class="form-select" id="studentSelect" name="student" required>
+    <option value="">Select Student</option>
+    {% if students %}
+        {% for student in students %}
+            <option value="{{ student.id }}">
+                {{ student.user.get_full_name|default:student.user.username }}
+            </option>
+        {% endfor %}
+    {% else %}
+        <option disabled>No students with cases yet</option>
+    {% endif %}
+</select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Evaluation Date</label>
+                        <input type="date" class="form-input" id="evaluationDate" required>
+                    </div>
+                </div>
+
+                <div class="offense-section">
+                    <div class="offense-header">
+                        <h3>Offense Assessment</h3>
+                        <div class="severity-badges">
+                            <span class="severity-badge severity-minor">Minor</span>
+                            <span class="severity-badge severity-major">Major</span>
+                            <span class="severity-badge severity-severe">Severe</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Reason for Session</label>
+                            <select class="form-select" id="reasonSelect" required>
+                                <option value="">Select Offense Type</option>
+                                <option value="tardiness">Tardiness</option>
+                                <option value="absence">Unexcused Absence</option>
+                                <option value="misconduct">Academic Misconduct</option>
+                                <option value="disruption">Classroom Disruption</option>
+                                <option value="bullying">Bullying/Harassment</option>
+                                <option value="violation">Code of Conduct Violation</option>
+                                <option value="substance">Substance-related Issue</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hearing Frequency</label>
+                            <select class="form-select" id="hearingFrequency" required>
+                                <option value="">Select Hearing</option>
+                                <option value="1st">1st Hearing</option>
+                                <option value="2nd">2nd Hearing</option>
+                                <option value="3rd">3rd Hearing</option>
+                                <option value="4th">4th Hearing (Final)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="hearing-tracker">
+                        <h4 style="margin-bottom: 15px; color: #2d7738;">Hearing Progress</h4>
+                        <div class="hearing-progress" id="hearingProgress">
+                            <div class="hearing-step" data-hearing="1st">
+                                <div class="hearing-number">1</div>
+                                <div class="hearing-label">1st Hearing</div>
+                            </div>
+                            <div class="hearing-step" data-hearing="2nd">
+                                <div class="hearing-number">2</div>
+                                <div class="hearing-label">2nd Hearing</div>
+                            </div>
+                            <div class="hearing-step" data-hearing="3rd">
+                                <div class="hearing-number">3</div>
+                                <div class="hearing-label">3rd Hearing</div>
+                            </div>
+                            <div class="hearing-step" data-hearing="4th">
+                                <div class="hearing-number">4</div>
+                                <div class="hearing-label">Final Hearing</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Detailed Assessment</label>
+                    <textarea class="form-textarea" id="assessment" placeholder="Provide detailed information about the incident, student's behavior, and recommended actions..." required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Severity Level</label>
+                        <select class="form-select" id="severityLevel" required>
+                            <option value="">Select Severity</option>
+                            <option value="minor">Minor Offense</option>
+                            <option value="major">Major Offense</option>
+                            <option value="severe">Severe Offense</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Follow-up Required</label>
+                        <select class="form-select" id="followUp">
+                            <option value="none">No Follow-up Needed</option>
+                            <option value="monitoring">Behavioral Monitoring</option>
+                            <option value="counseling">Additional Counseling</option>
+                            <option value="parent">Parent Conference</option>
+                            <option value="disciplinary">Disciplinary Action</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+                    <button type="button" class="btn btn-primary" onclick="saveDraft()">Save Draft</button>
+                    <button type="submit" class="btn btn-success">Submit Evaluation</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="recentEvaluations">
+    {% for evaluation in recent_evaluations %}
+    <div class="evaluation-item">
+        <div class="evaluation-meta">
+            <span class="student-name">{{ evaluation.student.user.get_full_name|default:evaluation.student.user.username }}</span>
+            <span class="evaluation-date">{{ evaluation.evaluation_date|date:"F d, Y" }}</span>
+        </div>
+        <div class="offense-info">
+            <strong>Reason:</strong> {{ evaluation.get_reason_for_session_display }} | 
+            <strong>Hearing:</strong> {{ evaluation.get_hearing_frequency_display }} | 
+            <strong>Severity:</strong> {{ evaluation.get_severity_level_display|title }}
+        </div>
+    </div>
+    {% empty %}
+    <p>No evaluations found.</p>
+    {% endfor %}
+</div>
+    </div>
+
+    {% csrf_token %}
+
+<script>
+    // Set today's date as default
+    document.getElementById('evaluationDate').valueAsDate = new Date();
+
+    document.getElementById('hearingFrequency').addEventListener('change', function () {
+        updateHearingProgress(this.value);
+    });
+
+    function updateHearingProgress(currentHearing) {
+        const steps = document.querySelectorAll('.hearing-step');
+        steps.forEach(step => step.classList.remove('active', 'completed'));
+
+        const hearingMap = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4 };
+        const currentLevel = hearingMap[currentHearing];
+        if (currentLevel) {
+            steps.forEach((step, index) => {
+                if (index < currentLevel - 1) step.classList.add('completed');
+                else if (index === currentLevel - 1) step.classList.add('active');
+            });
+        }
+    }
+
+    document.getElementById('evaluationForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const formData = new FormData();
+        formData.append('student', document.getElementById('studentSelect').value);
+        formData.append('evaluation_date', document.getElementById('evaluationDate').value);
+        formData.append('reason', document.getElementById('reasonSelect').value);
+        formData.append('hearing', document.getElementById('hearingFrequency').value);
+        formData.append('assessment', document.getElementById('assessment').value);
+        formData.append('severity', document.getElementById('severityLevel').value);
+        formData.append('follow_up', document.getElementById('followUp').value);
+
+        fetch('{% url "submit_evaluation" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    fetchRecentEvaluations();
+                    resetForm();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+    });
+
+    function saveDraft() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const formData = new FormData();
+        formData.append('student', document.getElementById('studentSelect').value);
+        formData.append('evaluation_date', document.getElementById('evaluationDate').value);
+        formData.append('reason', document.getElementById('reasonSelect').value);
+        formData.append('hearing', document.getElementById('hearingFrequency').value);
+        formData.append('assessment', document.getElementById('assessment').value);
+        formData.append('severity', document.getElementById('severityLevel').value);
+        formData.append('follow_up', document.getElementById('followUp').value);
+
+        fetch('{% url "save_evaluation_draft" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert('Error saving draft: ' + data.error);
+                }
+            });
+    }
+
+    
+    
+
+    function fetchRecentEvaluations() {
+        fetch("{% url 'get_recent_evaluations' %}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('recentEvaluations');
+                container.innerHTML = ""; // Clear existing
+
+                data.evaluations.forEach(evaluation => {
+                    const item = document.createElement('div');
+                    item.className = 'evaluation-item';
+                    item.innerHTML = `
+                        <div class="evaluation-meta">
+                            <span class="student-name">${evaluation.student_name}</span>
+                            <span class="evaluation-date">${evaluation.date}</span>
+                        </div>
+                        <div class="offense-info">
+                            <strong>Reason:</strong> ${evaluation.reason} | 
+                            <strong>Hearing:</strong> ${evaluation.hearing} | 
+                            <strong>Severity:</strong> ${evaluation.severity}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        });
+}
+
+    function resetForm() {
+        document.getElementById('evaluationForm').reset();
+        document.getElementById('evaluationDate').valueAsDate = new Date();
+        updateHearingProgress('');
+    }
+
+    document.getElementById('studentSelect').addEventListener('change', function () {
+        this.style.textTransform = 'capitalize';
+    });
+</script>
+</body>
+</html>

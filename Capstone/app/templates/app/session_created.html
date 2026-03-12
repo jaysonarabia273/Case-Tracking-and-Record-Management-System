@@ -1,0 +1,500 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Created Sessions Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <style>
+        .tabs-section {
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tabs-container {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 123, 255, 0.1);
+            color: #007bff;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #007bff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #007bff;
+        }
+
+        .sessions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .session-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+        }
+
+        .session-card.completed {
+            border-left-color: #28a745;
+        }
+
+        .session-card.cancelled {
+            border-left-color: #dc3545;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-header h4 {
+            margin: 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .session-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-ongoing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-pending {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .session-info {
+            margin-bottom: 15px;
+        }
+
+        .session-info p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .session-info strong {
+            color: #333;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-view {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .btn-view:hover {
+            background: #0056b3;
+        }
+
+        .btn-edit {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .btn-edit:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 1em;
+            font-style: italic;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .tabs-container {
+                flex-direction: column;
+            }
+
+            .session-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .session-actions {
+                flex-direction: column;
+            }
+
+            .empty-state {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-img"><i class="fas fa-user"></i></div>
+                <h3>{{user_name}}</h3>
+                <p>Faculty Member</p>
+            </div>
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item"><span class="icon">📊</span> Dashboard</a>
+                <a href="{% url 'student_case' %}" class="menu-item"><span class="icon">📋</span> Student's Cases</a>
+                <a href="{% url 'evaluation' %}" class="menu-item"><span class="icon">📝</span> Evaluations</a>
+                <a href="{% url 'student_list' %}" class="menu-item"><span class="icon">👥</span> Students</a>
+                <a href="{% url 'create_session' %}" class="menu-item">
+                    <span class="icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+                <a href="{% url 'session_created' %}" class="menu-item active">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="menu-item"><span class="icon">📈</span> Analytics</a>
+                <a href="#" class="menu-item"><span class="icon">⚙️</span> Settings</a>
+            </div>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit"><i>🚪</i> Log Out</button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="top-header">
+                <h1>Created Sessions Management</h1>
+                <div class="user-controls">
+                    <div class="notifications"><span class="icon">🔔</span></div>
+                    <div class="messages"><span class="icon">✉️</span></div>
+                </div>
+            </header>
+
+            <!-- Tabs Section -->
+            <div class="tabs-section">
+                <div class="tabs-container">
+                    <button class="tab-btn active" onclick="switchTab('ongoing', event)">Ongoing Cases</button>
+                    <button class="tab-btn" onclick="switchTab('pending', event)">Pending Cases</button>
+                    <button class="tab-btn" onclick="switchTab('completed', event)">Completed Cases</button>
+                    <button class="tab-btn" onclick="switchTab('history', event)">Case History</button>
+                </div>
+            </div>
+
+            <!-- Ongoing Sessions -->
+<section id="ongoing" class="sessions-section tab-content active">
+    <div class="section-header"><h2>Ongoing Cases</h2></div>
+    <div class="sessions-list">
+        {% if ongoing_sessions %}
+            {% for session in ongoing_sessions %}
+                <div class="session-card">
+                    <div class="session-header">
+                        <h4>{{ session.student_name }} | {{ session.student_course }} | {{ session.get_reason_display }}</h4>
+                        <span class="session-status status-ongoing">{{ session.get_status_display }}</span>
+                    </div>
+                    <div class="session-info">
+                        <p><strong>Offense:</strong> {{ session.offense_type }}</p>
+                        <p><strong>Description:</strong> {{ session.concern_description }}</p>
+                        <p><strong>Date:</strong> {{ session.incident_date }} {{ session.incident_time }}</p>
+                        <p><strong>Severity:</strong> {{ session.severity }}</p>
+                    </div>
+                    <div class="session-actions">
+                        <button class="btn-edit" onclick="editCaseStatus('{{ session.id }}')">Edit Status</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><span class="empty-icon">🕸️</span><h3>No ongoing cases</h3></div>
+        {% endif %}
+    </div>
+</section>
+
+            <section id="pending" class="sessions-section tab-content">
+    <div class="section-header"><h2>Pending Cases</h2></div>
+    <div class="sessions-list">
+        {% if pending_sessions %}
+            {% for session in pending_sessions %}
+                <div class="session-card">
+                    <div class="session-header">
+                        <h4>{{ session.student_name }} | {{ session.student_course }} | {{ session.get_reason_display }}</h4>
+                        <span class="session-status status-pending">{{ session.get_status_display }}</span>
+                    </div>
+                    <div class="session-info">
+                        <p><strong>Offense:</strong> {{ session.offense_type }}</p>
+                        <p><strong>Description:</strong> {{ session.concern_description }}</p>
+                        <p><strong>Date:</strong> {{ session.incident_date }} {{ session.incident_time }}</p>
+                        <p><strong>Severity:</strong> {{ session.severity }}</p>
+                    </div>
+                    <div class="session-actions">
+                        
+                        <button class="btn-edit" onclick="editCaseTime('{{ session.id }}')">Set Date and Time</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><span class="empty-icon">🕸️</span><h3>No pending cases</h3></div>
+        {% endif %}
+    </div>
+</section>
+
+            <section id="completed" class="sessions-section tab-content">
+    <div class="section-header"><h2>Completed Cases</h2></div>
+    <div class="sessions-list">
+        {% if completed_sessions %}
+            {% for session in completed_sessions %}
+                <div class="session-card completed">
+                    <div class="session-header">
+                        <h4>{{ session.student_name }} | {{ session.student_course }} | {{ session.get_reason_display }}</h4>
+                        <span class="session-status status-completed">{{ session.get_status_display }}</span>
+                    </div>
+                    <div class="session-info">
+                        <p><strong>Offense:</strong> {{ session.offense_type }}</p>
+                        <p><strong>Description:</strong> {{ session.concern_description }}</p>
+                        <p><strong>Date:</strong> {{ session.incident_date }} {{ session.incident_time }}</p>
+                        <p><strong>Severity:</strong> {{ session.severity }}</p>
+                    </div>
+                    <div class="session-actions">
+                        <button class="btn-edit" onclick="editCaseStatus('{{ session.id }}')">Edit Status</button>
+                    </div>
+                    </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><span class="empty-icon">✔️</span><h3>No completed cases</h3></div>
+        {% endif %}
+    </div>
+</section>
+
+            <section id="history" class="sessions-section tab-content">
+    <div class="section-header"><h2>Case History</h2></div>
+    <div class="sessions-list">
+        {% if history_sessions %}
+            {% for session in history_sessions %}
+                <div class="session-card">
+                    <div class="session-header">
+                        <h4>{{ session.student_name }} | {{ session.student_course }} | {{ session.get_reason_display }}</h4>
+                        <span class="session-status">{{ session.get_status_display }}</span>
+                    </div>
+                    <div class="session-info">
+                        <p><strong>Offense:</strong> {{ session.offense_type }}</p>
+                        <p><strong>Description:</strong> {{ session.concern_description }}</p>
+                        <p><strong>Date:</strong> {{ session.incident_date }} {{ session.incident_time }}</p>
+                        <p><strong>Severity:</strong> {{ session.severity }}</p>
+                    </div>
+                    <div class="session-actions">
+                        <a href="{% url 'view_case_details' session.id %}" class="btn-view">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><span class="empty-icon">📚</span><h3>No history records</h3></div>
+        {% endif %}
+    </div>
+</section>
+        </div>
+    </div>
+
+    <!-- JS: Tab Switching -->
+    <script>
+
+function editCaseTime(sessionId) {
+    // Show the modal to edit session time for Pending cases
+    document.getElementById('editSessionTimeModal').style.display = 'block';
+    document.getElementById('sessionId').value = sessionId;
+}
+
+// Handle form submission for setting the session time for Pending cases
+document.getElementById('sessionTimeForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const sessionId = document.getElementById('sessionId').value;
+    const sessionTime = document.getElementById('sessionTime').value;
+
+    // Get CSRF token
+    const csrfToken = getCookie('csrftoken');
+
+    fetch(`/session/${sessionId}/update-time/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({ session_time: sessionTime }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Session time updated successfully!");
+            location.reload(); // Reload the page to show updated time and move to Ongoing
+        } else {
+            alert("Error updating session time.");
+        }
+    })
+    .catch(error => {
+        console.error('Error updating session time:', error);
+        alert("Error updating session time.");
+    })
+    .finally(() => {
+        document.getElementById('editSessionTimeModal').style.display = 'none'; // Hide the modal
+    });
+});
+
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.tab-content').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar stickiness
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+/*************  ✨ Windsurf Command ⭐  *************/
+            /**
+             * Applies sticky positioning to the sidebar, so it stays in
+             * place on the left side of the screen when the window is
+             * larger than 768px. Otherwise, it resets the sidebar to
+             * position: relative and removes the fixed positioning.
+             */
+/*******  9e02148a-8f02-43be-a6f0-10588e3e1d50  *******/
+            function applyStickySidebar() {
+                if (window.innerWidth > 768) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.top = '0';
+                    sidebar.style.left = '0';
+                    sidebar.style.height = '100vh';
+                    sidebar.style.width = '280px';
+                    sidebar.style.overflow = 'auto';
+                    sidebar.style.zIndex = '1000';
+                    mainContent.style.marginLeft = '280px';
+                } else {
+                    sidebar.style.position = 'relative';
+                    sidebar.style.height = 'auto';
+                    sidebar.style.width = '100%';
+                    sidebar.style.overflow = 'visible';
+                    sidebar.style.zIndex = 'auto';
+                    mainContent.style.marginLeft = '0';
+                }
+            }
+
+            applyStickySidebar();
+            window.addEventListener('resize', applyStickySidebar);
+        });
+    </script>
+</body>
+</html>

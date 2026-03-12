@@ -1,0 +1,334 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+    <link rel="stylesheet" href="{% static 'app/animations.css' %}">
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header animate-fade-in-down">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <div class="breadcrumb">
+                    <span>Home</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Dashboard</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn hover-grow" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    {% if notification_count > 0 %}
+                    <span class="notification-badge badge-ping">{{ notification_count }}</span>
+                    {% endif %}
+                </button>
+                <button class="icon-btn hover-grow" title="Messages">
+                    <i class="fas fa-envelope"></i>
+                    {% if message_count > 0 %}
+                    <span class="notification-badge badge-ping">{{ message_count }}</span>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-enter" role="alert">
+                <i
+                    class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card primary card-enter hover-lift">
+                <div class="stat-icon animate-pulse">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Cases</div>
+                    <div class="stat-value">{{ total_cases }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card warning card-enter hover-lift">
+                <div class="stat-icon animate-pulse">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Pending Requests</div>
+                    <div class="stat-value">{{ pending_cases }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card secondary card-enter hover-lift">
+                <div class="stat-icon animate-pulse">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Active Sessions</div>
+                    <div class="stat-value">{{ active_cases }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Resolved Cases</div>
+                    <div class="stat-value">{{ resolved_cases }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Quick Actions</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-md" style="flex-wrap: wrap;">
+                    <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i>
+                        Request Guidance Session
+                    </a>
+                    <a href="{% url 'check_status' %}" class="btn btn-secondary">
+                        <i class="fas fa-search"></i>
+                        Check Case Status
+                    </a>
+                    <a href="{% url 'student_cases_dashboard' %}" class="btn btn-outline">
+                        <i class="fas fa-archive"></i>
+                        View All Cases
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Cases & Sessions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recent Cases & Sessions</h2>
+                <a href="{% url 'student_cases_dashboard' %}" class="btn btn-sm btn-outline">View All</a>
+            </div>
+            <div class="card-body">
+                {% if all_cases %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Counselor</th>
+                                <th>Date Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in all_cases|slice:":10" %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {% if case.type == 'case' %}
+                                        #CASE-{{ case.id }}
+                                        {% else %}
+                                        #SESSION-{{ case.id }}
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                                <td>{{ case.title }}</td>
+                                <td>
+                                    {% if case.type == 'case' %}
+                                    <span class="badge badge-draft">Case</span>
+                                    {% else %}
+                                    <span class="badge badge-info">Session</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if case.status == 'pending' %}
+                                    <span class="badge badge-pending">Pending</span>
+                                    {% elif case.status == 'in_progress' or case.status == 'approved' %}
+                                    <span class="badge badge-in-progress">In Progress</span>
+                                    {% elif case.status == 'resolved' or case.status == 'completed' %}
+                                    <span class="badge badge-completed">Completed</span>
+                                    {% elif case.status == 'rejected' or case.status == 'cancelled' %}
+                                    <span class="badge badge-rejected">{{ case.status|title }}</span>
+                                    {% else %}
+                                    <span class="badge badge-draft">{{ case.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if case.counselor %}
+                                    {{ case.counselor.user.first_name|default:case.counselor.user.username }}
+                                    {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ case.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if case.type == 'case' %}
+                                    <a href="{% url 'student_case' %}?case_id={{ case.id }}"
+                                        class="btn btn-sm btn-outline">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'check_status' %}?session_id={{ case.id }}"
+                                        class="btn btn-sm btn-outline">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3 class="empty-state-title">No Cases Yet</h3>
+                    <p class="empty-state-text">You don't have any cases or sessions. Request a guidance session to get
+                        started.</p>
+                    <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i>
+                        Request Guidance Session
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Case Status Overview -->
+        {% if total_cases > 0 %}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Case Status Overview</h2>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-card warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value">{{ pending_count }}</div>
+                        </div>
+                    </div>
+                    <div class="stat-card secondary">
+                        <div class="stat-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">In Progress</div>
+                            <div class="stat-value">{{ in_progress_count }}</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Resolved</div>
+                            <div class="stat-value">{{ resolved_count }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+
+                    toggle.on('click', function () {
+                        $('.sidebar').toggleClass('active');
+                    });
+
+                    // Close sidebar when clicking outside
+                    $(document).on('click', function (e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+
+            // Auto-hide messages after 5 seconds
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // Smooth scroll
+            $('html').css('scroll-behavior', 'smooth');
+        });
+    </script>
+
+    <style>
+        /* Mobile toggle button */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    </style>
+
+    <!-- Notification System -->
+    {% include "app/includes/notification_toast.html" %}
+    {% include "app/includes/notification_realtime.html" %}
+</body>
+
+</html>
+
+{% include 'app/includes/toast.html' %}

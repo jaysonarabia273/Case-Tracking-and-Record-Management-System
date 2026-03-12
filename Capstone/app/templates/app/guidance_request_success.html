@@ -1,0 +1,85 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="success-message">
+        <div class="success-icon">✅</div>
+        <h2>Request Submitted Successfully!</h2>
+        <p>Your guidance session request has been submitted and is pending approval from a counselor.</p>
+        <p>You will receive a notification once your request has been processed.</p>
+        
+        <div class="request-details">
+            <h3>Request Details:</h3>
+            <ul>
+                <li><strong>Reason:</strong> {{ session.get_reason_display }}</li>
+                <li><strong>Preferred Date:</strong> {{ session.preferred_date }}</li>
+                <li><strong>Preferred Time:</strong> {{ session.get_preferred_time_display }}</li>
+                {% if session.preferred_counselor %}
+                <li><strong>Preferred Counselor:</strong> {{ session.preferred_counselor.user.get_full_name }}</li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'student_dashboard' %}" class="btn btn-primary">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-message {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+        color: #28a745;
+    }
+    
+    .request-details {
+        text-align: left;
+        margin: 25px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .request-details ul {
+        list-style-type: none;
+        padding-left: 10px;
+    }
+    
+    .request-details li {
+        margin-bottom: 10px;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+    }
+    
+    .btn-primary {
+        background-color: #4e73df;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2e59d9;
+    }
+</style>
+{% endblock %}

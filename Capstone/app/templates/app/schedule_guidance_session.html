@@ -1,0 +1,306 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Guidance Session - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Request Guidance Session</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Request Session</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Request Form Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Schedule a Guidance Session</h2>
+            </div>
+            <div class="card-body">
+                <!-- Case Link Info (if applicable) -->
+                {% if linked_case %}
+                <div class="alert alert-success" style="border-left-color: var(--primary-green);">
+                    <i class="fas fa-link"></i>
+                    <div>
+                        <strong>Requesting session for Case #{{ linked_case.id }}:</strong> {{ linked_case.title }}<br>
+                        <div style="margin-top: 8px; font-size: 14px;">
+                            <strong>Status:</strong> 
+                            {% if linked_case.status == 'pending' %}
+                            <span class="badge badge-pending">{{ linked_case.status|title }}</span>
+                            {% elif linked_case.status == 'in_progress' %}
+                            <span class="badge badge-in-progress">{{ linked_case.status|title }}</span>
+                            {% elif linked_case.status == 'resolved' %}
+                            <span class="badge badge-completed">{{ linked_case.status|title }}</span>
+                            {% else %}
+                            <span class="badge badge-draft">{{ linked_case.status|title }}</span>
+                            {% endif %}
+                            | <strong>Counselor:</strong> {{ linked_case.counselor.user.first_name|default:"Not assigned" }}
+                        </div>
+                        <div style="margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.5); border-radius: 4px; font-size: 13px;">
+                            <strong>Case Description:</strong><br>
+                            {{ linked_case.description|truncatewords:30 }}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
+                            <i class="fas fa-info-circle"></i> This session will be automatically linked to this case. The form has been pre-filled with case information - you can modify it as needed.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Info Alert -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Please note:</strong> The counselor will assign the date and time of your session after reviewing your request. You will be notified once your session has been scheduled.
+                    </div>
+                </div>
+
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    
+                    <!-- Reason Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="id_reason">
+                            Reason for Session
+                            <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select name="reason" id="id_reason" class="form-control" required>
+                            <option value="" selected>Select a reason</option>
+                            <option value="academic">Academic Concerns</option>
+                            <option value="personal">Personal Issues</option>
+                            <option value="career">Career Planning</option>
+                            <option value="mental_health">Mental Health Support</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <div class="form-help">Choose the primary reason for requesting this session.</div>
+                    </div>
+
+                    <!-- Preferred Counselor -->
+                    <div class="form-group">
+                        <label class="form-label" for="id_preferred_counselor">
+                            Preferred Counselor (Optional)
+                        </label>
+                        <select name="preferred_counselor" id="id_preferred_counselor" class="form-control">
+                            <option value="" selected>No preference</option>
+                            {% for counselor in counselors %}
+                            <option value="{{ counselor.id }}">
+                                {{ counselor.user.get_full_name|default:counselor.user.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-help">Select a specific counselor or leave as "No preference" for automatic assignment.</div>
+                    </div>
+
+                    <!-- Concern Description -->
+                    <div class="form-group">
+                        <label class="form-label" for="id_concern_description">
+                            Brief Description of Your Concern
+                            <span style="color: var(--danger);">*</span>
+                        </label>
+                        <textarea 
+                            name="concern_description" 
+                            id="id_concern_description" 
+                            class="form-control" 
+                            rows="6" 
+                            placeholder="Please provide a brief description of what you'd like to discuss during the session..."
+                            required
+                        ></textarea>
+                        <div class="form-help">Provide details about your concern to help the counselor prepare for your session.</div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex gap-md" style="justify-content: flex-end; margin-top: var(--spacing-xl);">
+                        <a href="{% url 'student_dashboard' %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">What to Expect</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 110, 67, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-green); font-size: 20px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">Processing Time</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Your request will be reviewed within 24-48 hours.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(43, 125, 171, 0.1); display: flex; align-items: center; justify-content: center; color: var(--secondary-blue); font-size: 20px;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">Notification</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">You'll receive a notification once scheduled.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-md);">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 193, 7, 0.1); display: flex; align-items: center; justify-content: center; color: var(--warning); font-size: 20px;">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-xs); color: var(--text-primary);">Confidentiality</h4>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">All sessions are strictly confidential.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include 'app/includes/toast.html' %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+                    
+                    toggle.on('click', function() {
+                        $('.sidebar').toggleClass('active');
+                    });
+                    
+                    $(document).on('click', function(e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+            
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+            
+            // Form validation with visual feedback
+            $('.form-control').on('focus', function() {
+                $(this).parent().addClass('focused');
+            }).on('blur', function() {
+                $(this).parent().removeClass('focused');
+            });
+            
+            // Character counter for textarea
+            const textarea = $('#id_concern_description');
+            const maxLength = 1000;
+            
+            textarea.after('<div class="char-counter" style="text-align: right; font-size: 13px; color: var(--text-muted); margin-top: 4px;">0 / ' + maxLength + ' characters</div>');
+            
+            textarea.on('input', function() {
+                const length = $(this).val().length;
+                $(this).siblings('.char-counter').text(length + ' / ' + maxLength + ' characters');
+                
+                if (length > maxLength * 0.9) {
+                    $(this).siblings('.char-counter').css('color', 'var(--warning)');
+                } else {
+                    $(this).siblings('.char-counter').css('color', 'var(--text-muted)');
+                }
+            });
+            
+            // Form submission confirmation
+            $('form').on('submit', function(e) {
+                const reason = $('#id_reason').val();
+                const description = $('#id_concern_description').val();
+                
+                if (!reason || !description) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields.');
+                    return false;
+                }
+                
+                // Show loading state on submit button
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+            });
+            
+            // Auto-hide only Django messages (not case info box) after 5 seconds
+            setTimeout(function() {
+                $('.messages-container .alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+    
+    <style>
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        .form-group.focused .form-control {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(15, 110, 67, 0.1);
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,760 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Guidance System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #0f6e43, #064a2c);
+            min-height: 100vh;
+            width: 250px;
+            padding: 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: fixed; 
+            left: 0;
+            top: 0;
+            z-index: 1000;
+        }
+
+        
+        .main-content {
+            margin-left: 250px; 
+            padding: 30px;
+            width: calc(100% - 250px); /* Prevent overflow */
+            max-width: calc(100% - 250px);
+        }
+        .mb-1{
+           color: #0f6e43; 
+        }
+        
+        .sidebar .nav-link {
+            color: white;
+            padding: 15px 20px;
+            border-radius: 0;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .user-profile {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(175, 28, 28, 0.1);
+        }
+        .user-avatar {
+            width: 90px;
+            height: 90px;
+            background-color: rgba(255,255,255,0.9);
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #f9bc60;
+        }
+
+        .user-avatar i{
+            font-size: 40px;
+            color: #0f6e43;
+        }
+        
+        .page-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border: none;
+            overflow: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .settings-card .card-header {
+            background: linear-gradient(135deg, #4a7c59, #2d5016);
+            color: white;
+            padding: 20px 30px;
+            border: none;
+        }
+        .settings-card .card-body {
+            padding: 30px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            border-color: #4a7c59;
+            box-shadow: 0 0 0 0.2rem rgba(74, 124, 89, 0.25);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4a7c59, #2d5016);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 124, 89, 0.4);
+        }
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .logout-btn {
+            margin: 15px;
+            padding: 12px;
+            background-color: #c53030;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-top: auto;
+        }
+        
+        .logout-btn:hover {
+            background-color: #9b2c2c;
+            transform: translateY(-2px);
+        }
+        
+        .logout-btn i {
+            margin-right: 8px;
+        }
+        
+        .notification-types-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .notification-types-card .card-header {
+            background: #e9ecef;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .form-check {
+            margin-bottom: 15px;
+        }
+        .form-check-input:checked {
+            background-color: #4a7c59;
+            border-color: #4a7c59;
+        }
+        .form-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+        }
+        .alert-success {
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        }
+        .icon-section {
+            color: #4a7c59;
+            margin-right: 8px;
+        }
+        .email-input-group {
+            position: relative;
+            max-width: 100%;
+        }
+        .email-input-group .fas {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        .invalid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 5px;
+            font-size: 0.875em;
+            color: #dc3545;
+            font-weight: 500;
+        }
+        .form-control.is-invalid ~ .invalid-feedback {
+            display: block;
+        }
+        .required-field {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .alert-warning {
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            display: none;
+        }
+
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                min-height: auto;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                max-width: 100%;
+                padding: 15px;
+            }
+            
+            .page-header {
+                padding: 15px 20px;
+                margin-bottom: 20px;
+            }
+            
+            .settings-card .card-header {
+                padding: 15px 20px;
+            }
+            
+            .settings-card .card-body {
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 10px;
+            }
+            
+            .page-header {
+                padding: 10px 15px;
+            }
+            
+            .settings-card .card-body {
+                padding: 15px 10px;
+            }
+        }
+
+        /* Ensure all containers don't overflow */
+        .container, .container-fluid {
+            max-width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+            box-sizing: border-box;
+        }
+
+        /* Fix for tables and wide content */
+        table {
+            width: 100%;
+            table-layout: fixed;
+            word-wrap: break-word;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5 class="text-white mb-1">{{ user_name }}</h5>
+                    <small class="text-white-50">Student</small>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{% url 'student_dashboard' %}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="{% url 'student_cases_dashboard' %}">
+                        <i class="fas fa-folder"></i> My Cases
+                    </a>
+                    <a class="nav-link" href="{% url 'check_status' %}">
+                        <i class="fas fa-chart-bar"></i> Check Status
+                    </a>
+                    <a class="nav-link" href="{% url 'schedule_session' %}">
+                        <i class="fas fa-comments"></i> Request Session
+                    </a>
+                    <a class="nav-link active" href="{% url 'student_settings' %}">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <form action="{% url 'logout' %}" method="post" style="margin-top: auto;">
+                        {% csrf_token %}
+                        <button class="logout-btn" type="submit">
+                            <i class="fas fa-sign-out-alt"></i> Log Out
+                        </button>
+                    </form>
+                </nav>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 main-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">Settings</h3>
+                            <p class="text-muted mb-0">Manage your email notification preferences</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-bell text-muted"></i>
+                            <i class="fas fa-envelope text-muted ms-3"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Warning Message for Required Fields -->
+                <div class="alert alert-warning alert-dismissible fade show" id="warningAlert" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Required Fields Missing!</strong> Please fill in all required email addresses before saving your settings.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- Success Message -->
+                <div class="alert alert-success alert-dismissible fade show" id="successAlert" role="alert" style="display: none;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Success!</strong> Your email settings have been updated successfully.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- Settings Card -->
+                <div class="card settings-card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-envelope me-2"></i>
+                            Email Notification Settings
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="emailSettingsForm" novalidate>
+                            <!-- Required Fields Notice -->
+                            <div class="alert alert-info d-flex align-items-center mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Important:</strong> Both email addresses are required to receive notifications about your guidance cases.
+                                    <br><small>Fields marked with <span class="text-danger">*</span> are mandatory.</small>
+                                </div>
+                            </div>
+                            <!-- Email Addresses Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-user icon-section"></i>
+                                            Your Email Address
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="email-input-group">
+                                            <i class="fas fa-envelope"></i>
+                                            <input type="email" id="studentEmail" class="form-control" placeholder="your.email@example.com" value="" required>
+                                        </div>
+                                        <div class="invalid-feedback" id="studentEmailError">
+                                            Please provide a valid email address.
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            You will receive notifications about your guidance cases here.
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-users icon-section"></i>
+                                            Parent/Guardian Email
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="email-input-group">
+                                            <i class="fas fa-envelope"></i>
+                                            <input type="email" id="parentEmail" class="form-control" placeholder="parent.email@example.com" value="" required>
+                                        </div>
+                                        <div class="invalid-feedback" id="parentEmailError">
+                                            Please provide your parent/guardian's email address.
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Your parent/guardian will also receive important updates.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Enable Notifications -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
+                                    <label class="form-check-label fw-bold" for="enableNotifications">
+                                        <i class="fas fa-bell icon-section"></i>
+                                        Enable Email Notifications
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Turn this off to stop receiving all email notifications.
+                                </small>
+                            </div>
+                            
+                            <!-- Notification Types -->
+                            <div class="notification-types-card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-list-check me-2"></i>
+                                        Notification Types
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="newCase" checked>
+                                                <label class="form-check-label" for="newCase">
+                                                    <i class="fas fa-plus-circle text-success me-2"></i>
+                                                    New Case Created
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="statusUpdate" checked>
+                                                <label class="form-check-label" for="statusUpdate">
+                                                    <i class="fas fa-sync-alt text-primary me-2"></i>
+                                                    Case Status Updates
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="appointments" checked>
+                                                <label class="form-check-label" for="appointments">
+                                                    <i class="fas fa-calendar-check text-warning me-2"></i>
+                                                    Appointment Reminders
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="messages">
+                                                <label class="form-check-label" for="messages">
+                                                    <i class="fas fa-comment text-info me-2"></i>
+                                                    New Messages from Counselor
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Test Email Section -->
+                            <div class="card mt-4" style="border: 2px dashed #dee2e6;">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        Test Your Email Settings
+                                    </h6>
+                                    <p class="text-muted small mb-3">Send a test notification to verify your email addresses work correctly.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        Send Test Email
+
+
+                                      
+                                    </button>
+                                </div>
+                            </div>
+
+                            
+
+                            
+                            <!-- Submit Buttons -->
+                            <div class="mt-4 d-flex gap-3">
+                                <button type="submit" id="saveButton" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    Save Settings
+                                </button>
+                                <a href="#dashboard" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Dashboard
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Email Preview Section -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            Email Preview
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Sample Notification Email:</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="bg-success rounded-circle p-2 me-3">
+                                            <i class="fas fa-school text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Your School - Guidance Office</strong>
+                                            <br>
+                                            <small class="text-muted">guidance@school.edu</small>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <h6>Case Update Notification</h6>
+                                    <p class="small mb-2">Dear kavs,</p>
+                                    <p class="small mb-2">Your guidance case has been updated:</p>
+                                    <div class="bg-white p-2 border-start border-3 border-primary">
+                                        <strong>Case #: GC-2024-001</strong><br>
+                                        <small>Status: Under Review</small><br>
+                                        <small>Updated: June 4, 2025</small>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm mt-2">View Full Details</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Notification Statistics:</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body text-center">
+                                                <h4>12</h4>
+                                                <small>Emails Sent</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="card bg-info text-white">
+                                            <div class="card-body text-center">
+                                                <h4>98%</h4>
+                                                <small>Delivery Rate</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation and required field checking
+        const form = document.getElementById('emailSettingsForm');
+        const studentEmail = document.getElementById('studentEmail');
+        const parentEmail = document.getElementById('parentEmail');
+        const saveButton = document.getElementById('saveButton');
+        const warningAlert = document.getElementById('warningAlert');
+        const successAlert = document.getElementById('successAlert');
+        
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Validate individual field
+        function validateField(field, errorId, errorMessage) {
+            const value = field.value.trim();
+            const errorDiv = document.getElementById(errorId);
+            
+            if (!value) {
+                field.classList.add('is-invalid');
+                errorDiv.textContent = errorMessage;
+                return false;
+            } else if (!isValidEmail(value)) {
+                field.classList.add('is-invalid');
+                errorDiv.textContent = 'Please enter a valid email address.';
+                return false;
+            } else {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+                return true;
+            }
+        }
+        
+        // Real-time validation
+        studentEmail.addEventListener('input', function() {
+            validateField(this, 'studentEmailError', 'Your email address is required.');
+            checkFormValidity();
+        });
+        
+        parentEmail.addEventListener('input', function() {
+            validateField(this, 'parentEmailError', 'Parent/Guardian email address is required.');
+            checkFormValidity();
+        });
+        
+        // Check overall form validity
+        function checkFormValidity() {
+            const studentValid = validateField(studentEmail, 'studentEmailError', 'Your email address is required.');
+            const parentValid = validateField(parentEmail, 'parentEmailError', 'Parent/Guardian email address is required.');
+            
+            if (studentValid && parentValid) {
+                saveButton.disabled = false;
+                saveButton.classList.remove('btn-outline-secondary');
+                saveButton.classList.add('btn-success');
+                warningAlert.style.display = 'none';
+            } else {
+                saveButton.disabled = true;
+                saveButton.classList.remove('btn-success');
+                saveButton.classList.add('btn-outline-secondary');
+            }
+        }
+        
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studentValid = validateField(studentEmail, 'studentEmailError', 'Your email address is required.');
+            const parentValid = validateField(parentEmail, 'parentEmailError', 'Parent/Guardian email address is required.');
+            
+            if (!studentValid || !parentValid) {
+                warningAlert.style.display = 'block';
+                warningAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            
+            // Show loading state
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            saveButton.disabled = true;
+            
+            // Simulate save process
+            setTimeout(() => {
+                warningAlert.style.display = 'none';
+                successAlert.style.display = 'block';
+                successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                saveButton.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+                saveButton.classList.remove('btn-success');
+                saveButton.classList.add('btn-outline-success');
+                
+                setTimeout(() => {
+                    saveButton.innerHTML = '<i class="fas fa-save me-2"></i>Save Settings';
+                    saveButton.classList.remove('btn-outline-success');
+                    saveButton.classList.add('btn-success');
+                    saveButton.disabled = false;
+                }, 2000);
+            }, 1500);
+        });
+        
+        // Initial form validation check
+        checkFormValidity();
+        
+        // Auto-hide alerts after 7 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (alert.style.display !== 'none') {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.style.display = 'none', 500);
+                }
+            });
+        }, 7000);
+        
+        // Enable/disable notification types based on main toggle
+        const enableNotifications = document.getElementById('enableNotifications');
+        const notificationCheckboxes = document.querySelectorAll('.notification-types-card input[type="checkbox"]');
+        
+        enableNotifications.addEventListener('change', function() {
+            notificationCheckboxes.forEach(checkbox => {
+                checkbox.disabled = !this.checked;
+                if (!this.checked) {
+                    checkbox.checked = false;
+                }
+            });
+        });
+        
+        // Test email functionality
+        document.querySelector('.btn-outline-primary').addEventListener('click', function() {
+            // Check if emails are valid first
+            const studentValid = validateField(studentEmail, 'studentEmailError', 'Your email address is required.');
+            const parentValid = validateField(parentEmail, 'parentEmailError', 'Parent/Guardian email address is required.');
+            
+            if (!studentValid || !parentValid) {
+                alert('Please fill in valid email addresses before sending a test email.');
+                return;
+            }
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Sending...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-check me-1"></i> Test Email Sent!';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-envelope me-1"></i> Send Test Email';
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-primary');
+                    this.disabled = false;
+                }, 3000);
+            }, 2000);
+        });
+        
+        // Add some demo data for testing (remove in production)
+        setTimeout(() => {
+            studentEmail.value = 'student@school.edu';
+            parentEmail.value = 'parent.@gmail.com';
+            checkFormValidity();
+        }, 1000);
+
+        
+    </script>
+</body>
+</html>

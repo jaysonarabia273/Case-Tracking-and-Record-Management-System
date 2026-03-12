@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: casetracking
+    runtime: python
+    pythonVersion: "3.11"
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python Capstone/manage.py collectstatic --noinput
+    startCommand: gunicorn Capstone.Capstone.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120
+    workingDirectory: Capstone
+    healthCheckPath: /
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        scope: shared
+        value: ""
+    autoDeploy: false
+
+databases:
+  - name: casetracking_db
+    databaseName: casetracking
+    plan: free

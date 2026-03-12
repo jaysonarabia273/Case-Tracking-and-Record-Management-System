@@ -1,0 +1,183 @@
+<!-- Real-time Notification Polling System -->
+<script>
+const NotificationRealtime = {
+    pollInterval: null,
+    lastNotificationId: 0,
+    pollFrequency: 30000, // 30 seconds
+    
+    init() {
+        // Get the last notification ID from the current list
+        this.getLastNotificationId();
+        
+        // Start polling
+        this.startPolling();
+        
+        // Stop polling when tab is not visible (save resources)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.stopPolling();
+            } else {
+                this.startPolling();
+            }
+        });
+    },
+    
+    getLastNotificationId() {
+        // Try to get the latest notification ID from the page
+        const notifications = document.querySelectorAll('.notification-item');
+        if (notifications.length > 0) {
+            const firstNotif = notifications[0];
+            const notifId = firstNotif.getAttribute('onclick')?.match(/\d+/);
+            if (notifId) {
+                this.lastNotificationId = parseInt(notifId[0]);
+            }
+        }
+    },
+    
+    startPolling() {
+        if (this.pollInterval) return; // Already polling
+        
+        // Poll immediately
+        this.checkForNewNotifications();
+        
+        // Then poll at interval
+        this.pollInterval = setInterval(() => {
+            this.checkForNewNotifications();
+        }, this.pollFrequency);
+    },
+    
+    stopPolling() {
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
+        }
+    },
+    
+    async checkForNewNotifications() {
+        try {
+            const response = await fetch(`/notifications/check-new/?last_id=${this.lastNotificationId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            
+            if (data.new_notifications && data.new_notifications.length > 0) {
+                this.handleNewNotifications(data.new_notifications);
+            }
+            
+            // Update unread count
+            if (data.unread_count !== undefined) {
+                this.updateUnreadCount(data.unread_count);
+            }
+        } catch (error) {
+            console.error('Error checking notifications:', error);
+        }
+    },
+    
+    handleNewNotifications(notifications) {
+        notifications.forEach(notif => {
+            // Show toast for each new notification
+            this.showToastNotification(notif);
+            
+            // Add to notification list if dropdown is open
+            this.addToNotificationList(notif);
+            
+            // Update last notification ID
+            if (notif.id > this.lastNotificationId) {
+                this.lastNotificationId = notif.id;
+            }
+        });
+    },
+    
+    showToastNotification(notif) {
+        if (!window.ToastManager) return;
+        
+        // Determine toast type based on notification type
+        let toastType = 'info';
+        if (notif.notification_type.includes('approved') || notif.notification_type.includes('completed')) {
+            toastType = 'success';
+        } else if (notif.notification_type.includes('cancelled') || notif.notification_type.includes('rejected')) {
+            toastType = 'error';
+        } else if (notif.notification_type.includes('reminder')) {
+            toastType = 'warning';
+        }
+        
+        ToastManager.show({
+            type: toastType,
+            title: notif.title,
+            message: notif.message,
+            duration: 7000,
+            link: notif.link
+        });
+    },
+    
+    addToNotificationList(notif) {
+        const notificationList = document.querySelector('.notification-list');
+        if (!notificationList) return;
+        
+        // Check if empty state exists
+        const emptyState = notificationList.querySelector('div[style*="text-align: center"]');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Create notification item
+        const notifElement = document.createElement('div');
+        notifElement.className = 'notification-item unread';
+        notifElement.setAttribute('onclick', `handleNotificationClick(${notif.id}, '${notif.link}')`);
+        notifElement.innerHTML = `
+            <div class="notification-item-title">${notif.title}</div>
+            <div class="notification-item-message">${this.truncate(notif.message, 15)}</div>
+            <div class="notification-item-time">Just now</div>
+        `;
+        
+        // Add to top of list
+        notificationList.insertBefore(notifElement, notificationList.firstChild);
+    },
+    
+    updateUnreadCount(count) {
+        const countBadge = document.querySelector('.notification-count');
+        
+        if (count > 0) {
+            if (countBadge) {
+                countBadge.textContent = count;
+                countBadge.style.display = 'flex';
+            } else {
+                // Create badge if it doesn't exist
+                const bell = document.querySelector('.notification-bell');
+                if (bell) {
+                    const badge = document.createElement('span');
+                    badge.className = 'notification-count';
+                    badge.textContent = count;
+                    bell.appendChild(badge);
+                }
+            }
+        } else {
+            if (countBadge) {
+                countBadge.style.display = 'none';
+            }
+        }
+    },
+    
+    truncate(text, words) {
+        const arr = text.split(' ');
+        if (arr.length > words) {
+            return arr.slice(0, words).join(' ') + '...';
+        }
+        return text;
+    }
+};
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Only initialize if toast manager is available
+    if (window.ToastManager) {
+        NotificationRealtime.init();
+    }
+});
+</script>

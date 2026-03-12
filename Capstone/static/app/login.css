@@ -1,0 +1,571 @@
+:root {
+    --primary-color: #006400;
+    --primary-light: #007500;
+    --blue-green-gradient: linear-gradient(135deg, #0f6e43 0%, #2b7dab 100%);
+    --primary-dark: #004d00;
+    --accent-color: #4caf50;
+    --text-light: #ffffff;
+    --cvsu-gold: #FFC107;
+    --cvsu-light-gold: #FFE082;
+    --text-dark: #333333;
+    --bg-light: #f8f9fa;
+    --border-radius: 8px;
+    --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    min-height: 100vh;
+    padding-top: 70px;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.login-container {
+    display: flex;
+    width: 900px;
+    max-width: 100%;
+    background-color: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.university-banner {
+    flex: 1;
+    background: linear-gradient(135deg, #20ce4c 0%, #2b7dab 100%);
+    color: var(--text-light);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.login-form {
+    flex: 1;
+    padding: 40px;
+    background-color: white;
+}
+
+.university-logo {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.university-logo img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.university-name {
+    margin-bottom: 5px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.university-motto {
+    font-style: italic;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.login-subtitle {
+    margin-top: 40px;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.login-form h2 {
+    font-size: 28px;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+/* Django form styles */
+.login-form form p {
+    margin-bottom: 20px;
+}
+
+.login-form form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.input-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-container input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.input-container input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+}
+
+.email-container svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.email-container input {
+    padding-left: 40px;
+}
+
+/* Removed - using more specific selector at bottom of file */
+
+.login-form button {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-form button:hover {
+    background-color: var(--primary-dark);
+}
+
+.signup-text {
+    text-align: center;
+    margin-top: 30px;
+    color: var(--text-dark);
+    font-size: 15px;
+}
+
+.signup-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.signup-text a:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+.decorative-shape {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.shape-1 {
+    width: 100px;
+    height: 100px;
+    top: 10%;
+    left: 20%;
+}
+
+.shape-2 {
+    width: 150px;
+    height: 150px;
+    bottom: 10%;
+    right: 10%;
+}
+
+/* Hide Django form errors styling */
+.errorlist {
+    color: #dc3545;
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 0;
+    font-size: 14px;
+}
+
+/* Additional Django form styling */
+.login-form form p {
+    position: relative;
+}
+
+/* Navbar Styles */
+.navbar {
+    background: linear-gradient(135deg, #0f6e43 0%, #2b7dab 100%) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    padding: 12px 0;
+    border-bottom: 2px solid var(--cvsu-gold);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1030;
+    backdrop-filter: blur(10px);
+}
+
+.navbar-logo {
+    height: 45px;
+    width: auto;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: translateY(-1px);
+    color: var(--cvsu-light-gold) !important;
+}
+
+.navbar-brand:hover .navbar-logo {
+    transform: scale(1.05) rotate(2deg);
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 0 4px;
+    padding: 8px 16px !important;
+    position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--cvsu-gold) !important;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--cvsu-gold);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 80%;
+}
+
+/* Footer Styles */
+.footer-custom {
+    background: linear-gradient(135deg, #0f6e43 0%, #2b7dab 100%) !important;
+    color: white !important;
+    padding: 40px 0 20px !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.footer-logo {
+    height: 35px;
+    width: auto;
+    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.footer-links {
+    margin-top: 5px;
+}
+
+.footer-links a {
+    font-size: 0.9rem;
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:first-child {
+    margin-left: 0;
+}
+
+.footer-links a:hover {
+    color: var(--cvsu-gold);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px 10px;
+    }
+
+    .login-container {
+        flex-direction: column;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .university-banner,
+    .login-form {
+        width: 100%;
+    }
+
+    .university-banner {
+        padding: 30px 20px;
+    }
+
+    .login-form {
+        padding: 30px 20px;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .navbar-logo {
+        height: 35px;
+    }
+
+    .footer-brand {
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .footer-links {
+        text-align: center;
+    }
+
+    .footer-links a {
+        margin: 0 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Messages/Alerts Styling */
+.messages-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-error {
+    background-color: #fee !important;
+    color: #c33 !important;
+    border-left: 4px solid #c33 !important;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert::before {
+    content: '⚠';
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.alert-success::before {
+    content: '✓';
+}
+
+.alert-error::before {
+    content: '✕';
+}
+
+.alert-info::before {
+    content: 'ℹ';
+}
+
+/* Mobile responsive for alerts */
+@media (max-width: 768px) {
+    .alert {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+}
+
+/* Password input specific styling */
+.input-container.password-container {
+    position: relative;
+}
+
+.input-container.password-container input {
+    padding-right: 50px !important;
+}
+
+.input-container.password-container .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+    z-index: 10;
+}
+
+/* Force password container styling - testing fix */
+.password-container {
+    position: relative !important;
+    display: block !important;
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    width: 100% !important;
+    padding-right: 50px !important;
+    box-sizing: border-box !important;
+}
+
+.password-container .toggle-password {
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+    pointer-events: auto !important;
+}
+
+/* Google Login Button Styling */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #6c757d;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+    padding: 0 15px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.google-login-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #fff;
+    color: #444;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 15px;
+}
+
+.google-login-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #4285F4;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+}
+
+.google-login-btn svg {
+    flex-shrink: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .google-login-btn {
+        font-size: 14px;
+        padding: 12px;
+    }
+}

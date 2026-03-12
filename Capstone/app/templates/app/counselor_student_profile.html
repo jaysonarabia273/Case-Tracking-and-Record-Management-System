@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.user.get_full_name }} - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <a href="{% url 'counselor_students' %}">Students</a>
+                <span class="separator">/</span>
+                <span>{{ student.user.get_full_name }}</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-user-graduate"></i> Student Profile</h1>
+                    <p class="page-subtitle">{{ student.student_number }}</p>
+                </div>
+                <div class="page-actions">
+                    <a href="{% url 'counselor_create_case' %}?student={{ student.id }}" class="btn btn-primary">
+                        <i class="fas fa-folder-plus"></i> Create Case
+                    </a>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--spacing-lg);">
+                <!-- Left Column - Profile Info -->
+                <div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="text-align: center; margin-bottom: var(--spacing-lg);">
+                                <div style="width: 120px; height: 120px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; margin: 0 auto var(--spacing-md);">
+                                    {{ student.user.get_full_name|slice:":1"|upper }}
+                                </div>
+                                <h2 style="margin: 0 0 var(--spacing-xs) 0;">{{ student.user.get_full_name }}</h2>
+                                <p style="color: var(--text-secondary); margin: 0; font-size: 1.125rem;">{{ student.student_number }}</p>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-lg);">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <p style="word-break: break-all;">{{ student.user.email }}</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Course</label>
+                                    <p>{% if student.course %}{{ student.course }}{% else %}<span class="text-muted">Not specified</span>{% endif %}</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Year Level</label>
+                                    <p>{% if student.year_level %}{{ student.year_level }}{% else %}<span class="text-muted">Not specified</span>{% endif %}</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Section</label>
+                                    <p>{% if student.section %}{{ student.section }}{% else %}<span class="text-muted">Not specified</span>{% endif %}</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Account Created</label>
+                                    <p>{{ student.user.date_joined|date:"F d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-chart-bar"></i> Summary</h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; gap: var(--spacing-md);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Total Cases</span>
+                                    <span class="badge badge-draft" style="font-size: 1rem;">{{ cases_count }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Total Sessions</span>
+                                    <span class="badge badge-in-progress" style="font-size: 1rem;">{{ sessions_count }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Completed Sessions</span>
+                                    <span class="badge badge-completed" style="font-size: 1rem;">{{ completed_sessions }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - History -->
+                <div>
+                    <!-- Cases History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-folder-open"></i> Cases ({{ cases_count }})</h2>
+                        </div>
+                        <div class="card-body no-padding">
+                            {% if cases %}
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Counselor</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for case in cases %}
+                                        <tr>
+                                            <td><strong>#{{ case.id }}</strong></td>
+                                            <td>{{ case.title|truncatewords:5 }}</td>
+                                            <td>
+                                                {% if case.counselor %}
+                                                {{ case.counselor.user.get_full_name }}
+                                                {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if case.status == 'pending' %}
+                                                <span class="badge badge-pending">Pending</span>
+                                                {% elif case.status == 'in_progress' %}
+                                                <span class="badge badge-in-progress">In Progress</span>
+                                                {% elif case.status == 'resolved' %}
+                                                <span class="badge badge-completed">Resolved</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ case.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="{% url 'counselor_case_detail' case.id %}" class="btn btn-sm btn-outline">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-folder"></i></div>
+                                <h3 class="empty-state-title">No Cases</h3>
+                                <p class="empty-state-text">This student has no formal cases.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Sessions History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-comments"></i> Sessions ({{ sessions_count }})</h2>
+                        </div>
+                        <div class="card-body no-padding">
+                            {% if sessions %}
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Reason</th>
+                                            <th>Counselor</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for session in sessions %}
+                                        <tr>
+                                            <td><strong>#{{ session.id }}</strong></td>
+                                            <td>{{ session.get_reason_display }}</td>
+                                            <td>
+                                                {% if session.assigned_counselor %}
+                                                {{ session.assigned_counselor.user.get_full_name }}
+                                                {% elif session.preferred_counselor %}
+                                                {{ session.preferred_counselor.user.get_full_name }}
+                                                {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.scheduled_date %}
+                                                {{ session.scheduled_date|date:"M d, Y" }}
+                                                {% else %}
+                                                {{ session.created_at|date:"M d, Y" }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.status == 'pending' %}
+                                                <span class="badge badge-pending">Pending</span>
+                                                {% elif session.status == 'approved' %}
+                                                <span class="badge badge-in-progress">Scheduled</span>
+                                                {% elif session.status == 'completed' %}
+                                                <span class="badge badge-completed">Completed</span>
+                                                {% elif session.status == 'cancelled' %}
+                                                <span class="badge badge-cancelled">Cancelled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'counselor_session_detail' session.id %}" class="btn btn-sm btn-outline">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-comments"></i></div>
+                                <h3 class="empty-state-title">No Sessions</h3>
+                                <p class="empty-state-text">This student has no guidance sessions.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,792 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cases - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    {% include 'app/includes/student_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">My Cases Archive</h1>
+                <div class="breadcrumb">
+                    <a href="{% url 'student_dashboard' %}">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>My Cases</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages Display -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <div>{{ message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Cases</div>
+                    <div class="stat-value">{{ case_history|length }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">{{ pending_cases|length }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card secondary">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Ongoing</div>
+                    <div class="stat-value">{{ ongoing_cases|length }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value">{{ completed_cases|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-md" style="flex-wrap: wrap; justify-content: center;">
+                    <button class="btn btn-outline" onclick="filterTable('all')">
+                        <i class="fas fa-list"></i> All Cases
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('pending')">
+                        <i class="fas fa-hourglass-half"></i> Pending
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('ongoing')">
+                        <i class="fas fa-spinner"></i> Ongoing
+                    </button>
+                    <button class="btn btn-outline" onclick="filterTable('completed')">
+                        <i class="fas fa-check-circle"></i> Completed
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases List -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">All Cases & Sessions</h2>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <select class="form-control" style="width: auto; font-size: 14px;" onchange="sortCases(this.value)">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="status">By Status</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if case_history %}
+                <div class="table-container">
+                    <table class="data-table" id="casesTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title/Reason</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Student</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in case_history %}
+                            <tr data-status="{{ case.status }}" class="case-row">
+                                <td>
+                                    <strong style="color: var(--text-secondary); font-size: 14px;">#{{ case.id }}</strong>
+                                </td>
+                                <td style="max-width: 300px;">
+                                    <div style="font-weight: 600; margin-bottom: 4px;">{{ case.title }}</div>
+                                    <div style="font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ case.description|truncatewords:15 }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if case.type == 'session' %}
+                                    <span class="badge badge-in-progress">
+                                        <i class="fas fa-comments"></i> Session
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-draft">
+                                        <i class="fas fa-folder"></i> Case
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if case.status == 'pending' %}
+                                    <span class="badge badge-pending">Pending</span>
+                                    {% elif case.status == 'in_progress' or case.status == 'under_review' %}
+                                    <span class="badge badge-in-progress">Ongoing</span>
+                                    {% elif case.status == 'resolved' or case.status == 'completed' %}
+                                    <span class="badge badge-completed">Completed</span>
+                                    {% elif case.status == 'rejected' or case.status == 'cancelled' %}
+                                    <span class="badge badge-rejected">{{ case.status|title }}</span>
+                                    {% else %}
+                                    <span class="badge badge-draft">{{ case.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ case.student_name }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">Recent</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="openCaseModal({{ case.id }}, '{{ case.title|escapejs }}', '{{ case.description|escapejs }}', '{{ case.status }}', '{{ case.student_name|escapejs }}', '{{ case.type }}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3 class="empty-state-title">No Cases Found</h3>
+                    <p class="empty-state-text">
+                        {% if request.GET.search or request.GET.status or request.GET.type %}
+                        No cases match your search or filter criteria. Try adjusting your filters.
+                        {% else %}
+                        You don't have any cases or sessions yet. Request a guidance session to get started.
+                        {% endif %}
+                    </p>
+                    {% if not request.GET.search and not request.GET.status and not request.GET.type %}
+                    <a href="{% url 'schedule_session' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i>
+                        Request Guidance Session
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Detail Modal -->
+    <div id="caseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Case Details</h2>
+                <button class="modal-close" onclick="closeCaseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- View Mode -->
+                <div id="view-mode" class="detail-grid">
+                    <div class="detail-section">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Basic Information
+                        </h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Title:</span>
+                            <span class="detail-value" id="modal-title"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="modal-status-badge"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Student:</span>
+                            <span class="detail-value" id="modal-student"></span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section full-width">
+                        <h3 class="detail-section-title">
+                            <i class="fas fa-align-left"></i>
+                            Description
+                        </h3>
+                        <div class="detail-description" id="modal-description"></div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div id="edit-mode" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-title">Title</label>
+                        <input type="text" id="edit-title" class="form-control" placeholder="Case title">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-description">Description</label>
+                        <textarea id="edit-description" class="form-control" rows="6" placeholder="Case description"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- View Mode Buttons -->
+                <div id="view-buttons" style="display: flex; gap: var(--spacing-sm); width: 100%;">
+                    <button class="btn btn-danger" onclick="confirmCancelCase()" style="margin-right: auto;">
+                        <i class="fas fa-ban"></i>
+                        Cancel Case
+                    </button>
+                    <button class="btn btn-outline" onclick="closeCaseModal()">
+                        <i class="fas fa-times"></i>
+                        Close
+                    </button>
+                    <button class="btn btn-primary" onclick="enterEditMode()">
+                        <i class="fas fa-edit"></i>
+                        Edit
+                    </button>
+                </div>
+
+                <!-- Edit Mode Buttons -->
+                <div id="edit-buttons" style="display: none; gap: var(--spacing-sm); width: 100%;">
+                    <button class="btn btn-outline" onclick="exitEditMode()">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="saveCase()">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            const createMobileToggle = () => {
+                if (window.innerWidth <= 768 && !$('.mobile-toggle').length) {
+                    const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                    $('.main-content').prepend(toggle);
+                    
+                    toggle.on('click', function() {
+                        $('.sidebar').toggleClass('active');
+                    });
+                    
+                    $(document).on('click', function(e) {
+                        if (!$(e.target).closest('.sidebar, .mobile-toggle').length) {
+                            $('.sidebar').removeClass('active');
+                        }
+                    });
+                }
+            };
+            
+            createMobileToggle();
+            $(window).resize(createMobileToggle);
+            
+            // Auto-hide messages
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+        
+        // Modal functions
+        let currentCaseId = null;
+        let currentCaseType = 'case';
+        let currentCaseData = {};
+        
+        function openCaseModal(caseId, title, description, status, student, caseType) {
+            currentCaseId = caseId;
+            currentCaseType = caseType || 'case';
+            currentCaseData = { title, description, status, student };
+            
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-description').textContent = description || 'No description provided.';
+            document.getElementById('modal-student').textContent = student;
+            
+            // Set status badge
+            let statusBadge = '';
+            if (status === 'pending') {
+                statusBadge = '<span class="badge badge-pending">Pending</span>';
+            } else if (status === 'in_progress' || status === 'under_review' || status === 'approved') {
+                statusBadge = '<span class="badge badge-in-progress">Ongoing</span>';
+            } else if (status === 'resolved' || status === 'completed') {
+                statusBadge = '<span class="badge badge-completed">Completed</span>';
+            } else if (status === 'rejected' || status === 'cancelled' || status === 'canceled') {
+                statusBadge = '<span class="badge badge-rejected">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span>';
+            } else {
+                statusBadge = '<span class="badge badge-draft">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span>';
+            }
+            document.getElementById('modal-status-badge').innerHTML = statusBadge;
+            
+            // Reset to view mode
+            exitEditMode();
+            
+            // Show modal
+            document.getElementById('caseModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function enterEditMode() {
+            document.getElementById('view-mode').style.display = 'none';
+            document.getElementById('edit-mode').style.display = 'block';
+            document.getElementById('view-buttons').style.display = 'none';
+            document.getElementById('edit-buttons').style.display = 'flex';
+            
+            // Populate edit fields
+            document.getElementById('edit-title').value = currentCaseData.title;
+            document.getElementById('edit-description').value = currentCaseData.description;
+        }
+        
+        function exitEditMode() {
+            document.getElementById('view-mode').style.display = 'grid';
+            document.getElementById('edit-mode').style.display = 'none';
+            document.getElementById('view-buttons').style.display = 'flex';
+            document.getElementById('edit-buttons').style.display = 'none';
+        }
+        
+        function saveCase() {
+            const title = document.getElementById('edit-title').value;
+            const description = document.getElementById('edit-description').value;
+            
+            if (!title || !description) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Show loading
+            const saveBtn = document.querySelector('#edit-buttons .btn-primary');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+            
+            fetch('{% url "edit_case" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: new URLSearchParams({
+                    'case_id': currentCaseId,
+                    'title': title,
+                    'description': description
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update current data
+                    currentCaseData.title = title;
+                    currentCaseData.description = description;
+                    
+                    // Update view mode
+                    document.getElementById('modal-title').textContent = title;
+                    document.getElementById('modal-description').textContent = description;
+                    
+                    // Exit edit mode
+                    exitEditMode();
+                    
+                    // Show success message
+                    alert(data.message);
+                    
+                    // Reload page to show updated data
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving.');
+            })
+            .finally(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        }
+        
+        function confirmCancelCase() {
+            if (confirm('Are you sure you want to cancel this ' + currentCaseType + '? This action cannot be undone.')) {
+                cancelCase();
+            }
+        }
+        
+        function cancelCase() {
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Show loading
+            const cancelBtn = document.querySelector('#view-buttons .btn-danger');
+            const originalText = cancelBtn.innerHTML;
+            cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+            cancelBtn.disabled = true;
+            
+            fetch('{% url "cancel_case" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: new URLSearchParams({
+                    'case_id': currentCaseId,
+                    'case_type': currentCaseType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeCaseModal();
+                    
+                    // Reload page to reflect changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling.');
+            })
+            .finally(() => {
+                cancelBtn.innerHTML = originalText;
+                cancelBtn.disabled = false;
+            });
+        }
+        
+        function closeCaseModal() {
+            document.getElementById('caseModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('caseModal');
+            if (event.target === modal) {
+                closeCaseModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeCaseModal();
+            }
+        });
+        
+        // Filter table by status
+        function filterTable(filterType) {
+            const rows = document.querySelectorAll('#casesTable tbody tr.case-row');
+            
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                
+                if (filterType === 'all') {
+                    row.style.display = '';
+                } else if (filterType === 'pending' && status === 'pending') {
+                    row.style.display = '';
+                } else if (filterType === 'ongoing' && (status === 'in_progress' || status === 'under_review' || status === 'approved')) {
+                    row.style.display = '';
+                } else if (filterType === 'completed' && (status === 'resolved' || status === 'completed')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update button styles
+            document.querySelectorAll('.card .btn-outline').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            event.target.classList.remove('btn-outline');
+            event.target.classList.add('btn-primary');
+        }
+        
+        // Sort cases function
+        function sortCases(sortType) {
+            const tbody = document.querySelector('#casesTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                if (sortType === 'status') {
+                    return a.dataset.status.localeCompare(b.dataset.status);
+                }
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+    
+    <style>
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .modal-content {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-white);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+        
+        .modal-close:hover {
+            background: var(--danger);
+            color: var(--text-white);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: var(--spacing-lg);
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .modal-body::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+        
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+        
+        .detail-grid {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+        
+        .detail-section {
+            background: var(--bg-light);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .detail-section.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .detail-section-title i {
+            color: var(--primary-green);
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .detail-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .detail-description {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: var(--bg-white);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+        
+        /* Mobile responsiveness for modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: var(--spacing-md);
+            }
+            
+            .modal-title {
+                font-size: 18px;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

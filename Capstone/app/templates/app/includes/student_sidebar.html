@@ -1,0 +1,44 @@
+{% load static %}
+<div class="sidebar">
+    <div class="profile-container">
+        <div class="profile-pic">
+            <i class="fas fa-user"></i>
+        {% include 'app/includes/notification_bell.html' %}
+    </div>
+        <h3>{{ user_name }}</h3>
+        <p>Student</p>
+    </div>
+    
+    <div class="menu">
+        <a href="{% url 'student_dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+            <span class="icon"><i class="fas fa-chart-line"></i></span>
+            <span>Dashboard</span>
+        </a>
+        <a href="{% url 'student_cases_only' %}" class="menu-item {% if request.resolver_match.url_name == 'student_cases_only' %}active{% endif %}">
+            <span class="icon"><i class="fas fa-folder"></i></span>
+            <span>My Cases</span>
+        </a>
+        <a href="{% url 'student_sessions_only' %}" class="menu-item {% if request.resolver_match.url_name == 'student_sessions_only' %}active{% endif %}">
+            <span class="icon"><i class="fas fa-comments"></i></span>
+            <span>My Sessions</span>
+        </a>
+        <a href="{% url 'schedule_session' %}" class="menu-item {% if request.resolver_match.url_name == 'schedule_session' %}active{% endif %}">
+            <span class="icon"><i class="fas fa-comments"></i></span>
+            <span>Request Session</span>
+        </a>
+        <a href="{% url 'student_settings' %}" class="menu-item {% if request.resolver_match.url_name == 'student_settings' %}active{% endif %}">
+            <span class="icon"><i class="fas fa-cog"></i></span>
+            <span>Settings</span>
+        </a>
+    </div>
+    
+    <div class="sidebar-footer">
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button class="logout-btn" type="submit">
+                <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+                <span>Log Out</span>
+            </button>
+        </form>
+    </div>
+</div>

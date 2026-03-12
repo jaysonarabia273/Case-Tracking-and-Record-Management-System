@@ -1,0 +1,443 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session #{{ session.id }} - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <a href="{% url 'counselor_sessions' %}">Sessions</a>
+                <span class="separator">/</span>
+                <span>Session #{{ session.id }}</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-comments"></i>
+                        Session #{{ session.id }}
+                    </h1>
+                    <p class="page-subtitle">{{ session.get_reason_display }} - {{ session.student.user.get_full_name }}</p>
+                </div>
+                <div class="page-actions">
+                    {% if session.status == 'pending' %}
+                    <button class="btn btn-success" onclick="showApproveModal()">
+                        <i class="fas fa-check"></i> Approve & Schedule
+                    </button>
+                    <button class="btn btn-danger" onclick="showRejectModal()">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    {% elif session.status == 'approved' %}
+                    <button class="btn btn-primary" onclick="showRescheduleModal()">
+                        <i class="fas fa-calendar-alt"></i> Reschedule
+                    </button>
+                    <button class="btn btn-success" onclick="showCompleteModal()">
+                        <i class="fas fa-check-circle"></i> Mark as Completed
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status Alert -->
+            {% if session.status == 'pending' %}
+            <div style="background: rgba(255, 193, 7, 0.15); border-left: 4px solid var(--status-pending); padding: var(--spacing-md); border-radius: var(--border-radius-md); margin-bottom: var(--spacing-lg);">
+                <strong><i class="fas fa-exclamation-circle"></i> Action Required:</strong> This session request is pending your review.
+            </div>
+            {% endif %}
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg);">
+                <!-- Left Column -->
+                <div>
+                    <!-- Session Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-info-circle"></i>
+                                Session Information
+                            </h2>
+                            <span class="badge {% if session.status == 'pending' %}badge-pending{% elif session.status == 'approved' %}badge-in-progress{% elif session.status == 'completed' %}badge-completed{% elif session.status == 'cancelled' %}badge-cancelled{% endif %}">
+                                {{ session.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+                                <div>
+                                    <label class="form-label">Session Type</label>
+                                    <p style="font-weight: 600; margin: 0;">{{ session.get_reason_display }}</p>
+                                </div>
+                                <div>
+                                    <label class="form-label">Request Date</label>
+                                    <p style="margin: 0;">{{ session.created_at|date:"F d, Y g:i A" }}</p>
+                                </div>
+                                <div>
+                                    <label class="form-label">Session Title</label>
+                                    <form method="post" action="{% url 'counselor_update_session_title' session.id %}">
+                                        {% csrf_token %}
+                                        <div style="display:flex; gap:8px; align-items:center;">
+                                            <input type="text" name="title" class="form-control" value="{% if session.title %}{{ session.title }}{% else %}Session #{{ session.id }}{% endif %}" maxlength="255" required>
+                                            <button type="submit" class="btn btn-sm btn-secondary">Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div>
+                                    <label class="form-label">Scheduled Date</label>
+                                    <p style="margin: 0;">
+                                        {% if session.scheduled_date %}
+                                        <strong>{{ session.scheduled_date|date:"F d, Y" }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">Not scheduled yet</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="form-label">Scheduled Time</label>
+                                    <p style="margin: 0;">
+                                        {% if session.scheduled_time %}
+                                        <strong>{{ session.scheduled_time|time:"g:i A" }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">Not scheduled yet</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: var(--spacing-lg);">
+                                <label class="form-label">Preferred Counselor</label>
+                                <p style="margin: 0;">
+                                    {% if session.preferred_counselor %}
+                                    {{ session.preferred_counselor.user.get_full_name }}
+                                    {% else %}
+                                    <span class="text-muted">No preference</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div style="margin-top: var(--spacing-lg);">
+                                <label class="form-label">Assigned Counselor</label>
+                                <p style="margin: 0;">
+                                    {% if session.assigned_counselor %}
+                                    <strong>{{ session.assigned_counselor.user.get_full_name }}</strong>
+                                    {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div style="margin-top: var(--spacing-lg);">
+                                <label class="form-label">Linked Case</label>
+                                <p style="margin: 0;">
+                                    {% if session.cases.exists %}
+                                        {% for case in session.cases.all %}
+                                        <a href="{% url 'counselor_case_detail' case.id %}" class="badge badge-in-progress" style="text-decoration: none;">
+                                            <i class="fas fa-link"></i> Case #{{ case.id }} - {{ case.title }}
+                                        </a>
+                                        {% endfor %}
+                                    {% else %}
+                                    <span class="badge badge-draft">Standalone Session</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concern Description -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-file-alt"></i>
+                                Concern Description
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <p style="white-space: pre-wrap; line-height: 1.8;">{{ session.concern_description }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Session Notes (for completed sessions) -->
+                    {% if session.status == 'completed' and session.session_notes %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-sticky-note"></i>
+                                Session Notes
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <p style="white-space: pre-wrap; line-height: 1.8;">{{ session.session_notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions Section -->
+                    {% if session.status in 'approved,pending,completed' %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-tasks"></i>
+                                Quick Actions
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                                <a class="btn btn-outline" href="{% url 'counselor_create_case' %}?student={{ session.student.id }}&session_id={{ session.id }}">
+                                    <i class="fas fa-folder-plus"></i> Create Case from Session
+                                </a>
+                                <a class="btn btn-outline" href="{% url 'counselor_cases' %}">
+                                    <i class="fas fa-link"></i> Link to Existing Case
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <!-- Student Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-user-graduate"></i>
+                                Student Information
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="text-align: center; margin-bottom: var(--spacing-lg);">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin: 0 auto var(--spacing-md);">
+                                    {{ session.student.user.get_full_name|slice:":1"|upper }}
+                                </div>
+                                <h3 style="margin: 0 0 var(--spacing-xs) 0;">{{ session.student.user.get_full_name }}</h3>
+                                <p style="color: var(--text-secondary); margin: 0;">{{ session.student.student_number }}</p>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-md);">
+                                <div style="margin-bottom: var(--spacing-md);">
+                                    <label class="form-label">Email</label>
+                                    <p style="margin: 0;">{{ session.student.user.email }}</p>
+                                </div>
+                                <div style="margin-bottom: var(--spacing-md);">
+                                    <label class="form-label">Course</label>
+                                    <p style="margin: 0;">
+                                        {% if session.student.course %}
+                                        {{ session.student.course }}
+                                        {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div style="margin-bottom: var(--spacing-md);">
+                                    <label class="form-label">Year Level</label>
+                                    <p style="margin: 0;">
+                                        {% if session.student.year_level %}
+                                        {{ session.student.year_level }}
+                                        {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-md); margin-top: var(--spacing-md);">
+                                <a href="{% url 'counselor_student_profile' session.student.id %}" class="btn btn-outline" style="width: 100%; justify-content: center;">
+                                    <i class="fas fa-user"></i> View Full Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-history"></i>
+                                Session History
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                                <div style="display: flex; align-items: flex-start; gap: var(--spacing-sm);">
+                                    <i class="fas fa-circle" style="color: var(--status-pending); font-size: 0.5rem; margin-top: 0.5rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.875rem;">Session Requested</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ session.created_at|date:"M d, Y g:i A" }}</div>
+                                    </div>
+                                </div>
+                                
+                                {% if session.scheduled_date %}
+                                <div style="display: flex; align-items: flex-start; gap: var(--spacing-sm);">
+                                    <i class="fas fa-circle" style="color: var(--status-in-progress); font-size: 0.5rem; margin-top: 0.5rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.875rem;">Session Scheduled</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ session.scheduled_date|date:"M d, Y" }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if session.status == 'completed' %}
+                                <div style="display: flex; align-items: flex-start; gap: var(--spacing-sm);">
+                                    <i class="fas fa-circle" style="color: var(--status-completed); font-size: 0.5rem; margin-top: 0.5rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.875rem;">Session Completed</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ session.updated_at|date:"M d, Y g:i A" }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Approve & Schedule Modal -->
+    <div id="approveModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--border-radius-lg); padding: var(--spacing-xl); max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 var(--spacing-lg) 0;"><i class="fas fa-calendar-check"></i> Approve & Schedule Session</h3>
+            <form method="post" action="{% url 'counselor_approve_session' session.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label required">Schedule Date</label>
+                    <input type="date" name="scheduled_date" class="form-control" required min="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Schedule Time</label>
+                    <input type="time" name="scheduled_time" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Add any notes for the student..."></textarea>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="hideApproveModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve & Schedule</button>
+                </div>
+            </form>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Reschedule Modal -->
+    <div id="rescheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--border-radius-lg); padding: var(--spacing-xl); max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 var(--spacing-lg) 0;"><i class="fas fa-calendar-alt"></i> Reschedule Session</h3>
+            <form method="post" action="{% url 'counselor_reschedule_session' session.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label required">New Date</label>
+                    <input type="date" name="scheduled_date" class="form-control" required min="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">New Time</label>
+                    <input type="time" name="scheduled_time" class="form-control" required>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="hideRescheduleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Complete Session Modal -->
+    <div id="completeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--border-radius-lg); padding: var(--spacing-xl); max-width: 600px; width: 90%;">
+            <h3 style="margin: 0 0 var(--spacing-lg) 0;"><i class="fas fa-check-circle"></i> Mark Session as Completed</h3>
+            <form method="post" action="{% url 'counselor_complete_session' session.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label required">Session Notes</label>
+                    <textarea name="session_notes" class="form-control" rows="6" placeholder="Summarize what was discussed, outcomes, follow-up actions, etc..." required></textarea>
+                    <span class="form-help">These notes will be recorded but not visible to the student.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Requires Follow-up?</label>
+                    <select name="requires_followup" class="form-control">
+                        <option value="no">No follow-up needed</option>
+                        <option value="yes">Yes, schedule follow-up</option>
+                        <option value="case">Yes, create formal case</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="hideCompleteModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Mark as Completed</button>
+                </div>
+            </form>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--border-radius-lg); padding: var(--spacing-xl); max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 var(--spacing-lg) 0;"><i class="fas fa-times-circle"></i> Reject Session Request</h3>
+            <form method="post" action="{% url 'counselor_reject_session' session.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label required">Reason for Rejection</label>
+                    <textarea name="rejection_reason" class="form-control" rows="4" placeholder="Explain why this session cannot be accommodated..." required></textarea>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="hideRejectModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Request</button>
+                </div>
+            </form>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+
+    <script>
+        function showApproveModal() {
+            document.getElementById('approveModal').style.display = 'flex';
+        }
+        function hideApproveModal() {
+            document.getElementById('approveModal').style.display = 'none';
+        }
+        function showRescheduleModal() {
+            document.getElementById('rescheduleModal').style.display = 'flex';
+        }
+        function hideRescheduleModal() {
+            document.getElementById('rescheduleModal').style.display = 'none';
+        }
+        function showCompleteModal() {
+            document.getElementById('completeModal').style.display = 'flex';
+        }
+        function hideCompleteModal() {
+            document.getElementById('completeModal').style.display = 'none';
+        }
+        function showRejectModal() {
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+        function hideRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+        }
+        
+        // Close modals on outside click
+        ['approveModal', 'completeModal', 'rejectModal'].forEach(id => {
+            document.getElementById(id).addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+    <!-- Add Session Modal -->
+    {% include "app/includes/add_session_modal.html" %}
+</body>
+</html>

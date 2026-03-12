@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Case - CVSU Case Tracking</title>
+    <link rel="stylesheet" href="{% static 'app/counselor_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'app/includes/counselor_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a href="{% url 'counselor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <a href="{% url 'counselor_cases' %}">Cases</a>
+                <span class="separator">/</span>
+                <span>Create New Case</span>
+            </nav>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-folder-plus"></i>
+                        Create New Case
+                    </h1>
+                    <p class="page-subtitle">Create a formal case for a student</p>
+                </div>
+            </div>
+
+            <div style="max-width: 900px;">
+                {% if selected_student_id or selected_session_id %}
+                <div class="card" style="border-left: 4px solid var(--secondary-blue);">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-info-circle"></i> Prefill Context</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if selected_student_id %}
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label class="form-label">Student</label>
+                            <div style="font-weight: 600;">
+                                {% for s in students %}{% if s.id == selected_student_id %}{{ s.user.get_full_name }} ({{ s.student_number }}){% endif %}{% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if selected_session_id %}
+                        <div class="form-group">
+                            <label class="form-label">Origin Session</label>
+                            <div>
+                                Session #{{ selected_session_id }} —
+                                {% for sess in recent_sessions %}{% if sess.id == selected_session_id %}{{ sess.get_reason_display }}{% endif %}{% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-file-alt"></i> Case Information</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="form-group">
+                                <label class="form-label required">Select Student</label>
+                                <select name="student" class="form-control" required>
+                                    <option value="">Choose a student...</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.id }}" {% if selected_student_id == student.id %}selected{% endif %}>{{ student.user.get_full_name }} ({{ student.student_number }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Case Title</label>
+                                <input type="text" name="title" class="form-control" placeholder="Brief title for the case" value="{{ prefill_title|default:'' }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Description</label>
+                                <textarea name="description" class="form-control" rows="6" placeholder="Detailed description of the case..." required>{{ prefill_description|default:'' }}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Link to Existing Session (Optional)</label>
+                                <select name="session_id" class="form-control">
+                                    <option value="">No session selected</option>
+                                    {% for session in recent_sessions %}
+                                    <option value="{{ session.id }}" {% if selected_session_id == session.id %}selected{% endif %}>Session #{{ session.id }} - {{ session.student.user.get_full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="form-help">Link this case to an existing guidance session</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Initial Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress" selected>In Progress</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; gap: var(--spacing-sm); justify-content: flex-end; margin-top: var(--spacing-xl);">
+                                <a href="{% url 'counselor_cases' %}" class="btn btn-outline">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Case
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% include "app/includes/toast.html" %}
+        </div>
+    </div>
+</body>
+</html>

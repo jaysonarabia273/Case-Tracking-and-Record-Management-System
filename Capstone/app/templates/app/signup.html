@@ -1,0 +1,568 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVSU Guidance Signup</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/signup.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'app/animations.css' %}?v=7.1">
+    <link rel="shortcut icon" href="{% static 'app/Images/CvSu_L0go.png' %}" type="image/png">
+    <style>
+        :root {
+            --primary-color: #006400;
+            --primary-light: #007500;
+            --primary-dark: #004d00;
+            --blue-green-gradient: linear-gradient(135deg, #20ce4c 0%, #2b7dab 100%);
+            --accent-color: #4caf50;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bg-light: #f8f9fa;
+            --border-radius: 8px;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 70px;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            display: flex;
+            width: 900px;
+            max-width: 100%;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .university-banner {
+            flex: 1;
+            background: linear-gradient(135deg, #20ce4c 0%, #2b7dab 100%);
+            color: var(--text-light);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-form {
+            flex: 1;
+            padding: 40px;
+            background-color: white;
+        }
+
+        .university-logo {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .university-logo img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .university-name {
+            margin-bottom: 5px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .university-motto {
+            font-style: italic;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .login-subtitle {
+            margin-top: 40px;
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .login-form h2 {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        /* Base input styling - applies to both input and select */
+        .input-container input,
+        .input-container select {
+            width: 100%;
+            padding: 14px 16px 14px 40px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: white;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Select specific styling */
+        .input-container select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Password container specific styling */
+        .password-container input {
+            padding-right: 40px;
+            padding-left: 16px;
+        }
+
+        /* Focus and hover effects */
+        .input-container input:focus,
+        .input-container select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+        }
+
+        .input-container input:hover,
+        .input-container select:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 100, 0, 0.15);
+        }
+
+        /* Icon positioning - applies to all input containers */
+        .input-container svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Option styling */
+        .input-container select option {
+            padding: 12px 16px;
+            background-color: white;
+            color: #333;
+            font-size: 16px;
+            border: none;
+            line-height: 1.5;
+        }
+
+        .input-container select option:first-child {
+            color: #999;
+        }
+
+        .input-container select option:not(:first-child) {
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Toggle password styling */
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            z-index: 1;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        .login-form button:hover {
+            background-color: var(--primary-light);
+        }
+
+        .signup-text,
+        .login-text {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-dark);
+            font-size: 15px;
+        }
+
+        .signup-text a,
+        .login-text a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .signup-text a:hover,
+        .login-text a:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        .decorative-shape {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 20%;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            bottom: 10%;
+            right: 10%;
+        }
+
+        .errorlist {
+            color: #dc3545;
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                width: 100%;
+                max-width: 500px;
+            }
+
+            .university-banner,
+            .login-form {
+                width: 100%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Enhanced Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'app/Images/CvSu_L0go.png' %}" alt="CVSU Logo" class="navbar-logo me-3">
+                <span>CVSU-B Tracking System</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'about' in request.path %}active{% endif %}" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle me-1"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'contact' in request.path %}active{% endif %}"
+                            href="{% url 'contact' %}">
+                            <i class="fas fa-envelope me-1"></i> Contact
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'login' in request.path %}active{% endif %}" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i> Log-In
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'signup' in request.path %}active{% endif %}"
+                            href="{% url 'signup' %}">
+                            <i class="fas fa-user-plus me-1"></i> Sign Up
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper flex-grow-1">
+        <div class="login-container animate-fade-in">
+            <div class="university-banner animate-fade-in-left">
+                <div class="decorative-shape shape-1"></div>
+                <div class="decorative-shape shape-2"></div>
+
+                <div class="university-logo animate-scale-in">
+                    <img src="{% static 'app/Images/CvSu_L0go.png' %}" alt="CVSU Logo">
+                </div>
+
+                <div class="university-name text-gradient-animate">Cavite State University</div>
+                <div class="university-name">Bacoor Campus</div>
+                <div class="university-motto">Truth, Excellence, Service</div>
+
+                <p class="login-subtitle">Signup to track your progress easily</p>
+            </div>
+
+            <div class="login-form animate-fade-in-right">
+                <h2>Signup</h2>
+
+                <!-- Django Messages Display -->
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-enter" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="input-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <select name="user_type" id="user_type" required onchange="toggleAccountFields()">
+                            <option value="student" selected>Student Account</option>
+                            <option value="counselor">Counselor Account</option>
+                        </select>
+                    </div>
+
+                    <div class="input-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <input type="text" name="username" placeholder="Username" autocomplete="username" required>
+                    </div>
+
+                    <div class="input-container email-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <input type="email" name="email" placeholder="Email" autocomplete="email" required>
+                    </div>
+
+                    <div class="input-container password-container">
+                        <input type="password" id="password1" name="password1" placeholder="Password"
+                            autocomplete="new-password" required>
+                        <div class="toggle-password" onclick="togglePassword('password1')">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="input-container password-container">
+                        <input type="password" id="password2" name="password2" placeholder="Confirm Password"
+                            autocomplete="new-password" required>
+                        <div class="toggle-password" onclick="togglePassword('password2')">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="input-container" id="student-number-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3h18v18H3zM8 12h8M12 8v8" />
+                        </svg>
+                        <input type="text" id="student_number" name="student_number" placeholder="Student Number (e.g., 202211111)"
+                            autocomplete="off" required>
+                    </div>
+
+                    <div class="input-container" id="counselor-id-container" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3h18v18H3zM8 12h8" />
+                        </svg>
+                        <input type="text" id="counselor_id" name="counselor_id" placeholder="Counselor ID"
+                            autocomplete="off">
+                    </div>
+
+                    <div
+                        style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin: 15px 0; font-size: 13px; color: #856404;">
+                        <strong>📧 Email Verification:</strong><br>
+                        • CVSU emails (@cvsu.edu.ph): Auto-verified<br>
+                        • Other emails: OTP verification required
+                    </div>
+
+
+
+
+
+                    <button type="submit" class="btn-ripple btn-shine hover-lift">Sign Up</button>
+
+
+
+
+                    <p class="signup-text">
+                        Already have an account? <a href="{% url 'login' %}" class="hover-brightness">Login here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <script>
+
+            function toggleAccountFields() {
+                const userType = document.getElementById('user_type').value;
+                const studentContainer = document.getElementById('student-number-container');
+                const counselorContainer = document.getElementById('counselor-id-container');
+                const studentNumberInput = document.getElementById('student_number');
+                const counselorIdInput = document.getElementById('counselor_id');
+
+                if (userType === 'counselor') {
+                    studentContainer.style.display = 'none';
+                    counselorContainer.style.display = 'block';
+                    studentNumberInput.required = false;
+                    studentNumberInput.value = '';
+                    counselorIdInput.required = true;
+                } else {
+                    studentContainer.style.display = 'block';
+                    counselorContainer.style.display = 'none';
+                    counselorIdInput.required = false;
+                    counselorIdInput.value = '';
+                    studentNumberInput.required = true;
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', toggleAccountFields);
+
+
+
+
+
+            function togglePassword(id) {
+                var input = document.getElementById(id);
+                var icon = input.nextElementSibling.querySelector('.eye-icon');
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                `;
+                } else {
+                    input.type = "password";
+                    icon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+                }
+            }
+        </script>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer-custom text-white text-center mt-auto">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Left: Logo & Name -->
+                <div class="col-md-6 mb-3 mb-md-0 text-md-start d-flex align-items-center footer-brand">
+                    <img src="{% static 'app/Images/CvSu_L0go.png' %}" alt="CVSU Logo" class="footer-logo me-3"
+                        style="height: 40px;">
+                    <span>CVSU-B Tracking System</span>
+                </div>
+
+                <!-- Right: Privacy Links -->
+                <div class="col-md-6 text-md-end">
+                    <img src="{% static 'app/Images/data_privacy.png' %}" alt="Data Privacy Act"
+                        class="footer-logo me-3" style="height: 45px;">
+                    <p class="mb-1">&copy; 2025 Case Tracking System - All Rights Reserved</p>
+                    <div class="footer-links">
+                        <a href="#">Data Privacy Act</a>
+                        <a href="#">Terms & Conditions</a>
+                        <a href="#">Anti-Bribery Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

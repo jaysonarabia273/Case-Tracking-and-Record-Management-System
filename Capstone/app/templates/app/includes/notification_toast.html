@@ -1,0 +1,312 @@
+<!-- Toast Notification Container -->
+<div id="toast-container" class="toast-container"></div>
+
+<style>
+    .toast-container {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .toast {
+        background: white;
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+        min-width: 300px;
+        max-width: 400px;
+        pointer-events: auto;
+        animation: slideInRight 0.3s ease-out;
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+        border-left: 4px solid var(--primary-green);
+    }
+
+    .toast.toast-success {
+        border-left-color: var(--primary-green);
+    }
+
+    .toast.toast-info {
+        border-left-color: #3b82f6;
+    }
+
+    .toast.toast-warning {
+        border-left-color: #f59e0b;
+    }
+
+    .toast.toast-error {
+        border-left-color: #ef4444;
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.875rem;
+    }
+
+    .toast-success .toast-icon {
+        background: rgba(22, 163, 74, 0.1);
+        color: var(--primary-green);
+    }
+
+    .toast-info .toast-icon {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .toast-warning .toast-icon {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .toast-error .toast-icon {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .toast-message {
+        font-size: 0.813rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+
+    .toast-close {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .toast-close:hover {
+        background: var(--bg-light);
+        color: var(--text-primary);
+    }
+
+    .toast-actions {
+        margin-top: var(--spacing-sm);
+        display: flex;
+        gap: var(--spacing-xs);
+    }
+
+    .toast-action-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .toast-action-btn.primary {
+        background: var(--primary-green);
+        color: white;
+    }
+
+    .toast-action-btn.primary:hover {
+        background: var(--primary-green-dark);
+    }
+
+    .toast-action-btn.secondary {
+        background: var(--bg-light);
+        color: var(--text-primary);
+    }
+
+    .toast-action-btn.secondary:hover {
+        background: var(--border-color);
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+
+    .toast.removing {
+        animation: slideOutRight 0.3s ease-in forwards;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .toast-container {
+            top: 60px;
+            right: 10px;
+            left: 10px;
+        }
+
+        .toast {
+            min-width: auto;
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .toast {
+            padding: var(--spacing-sm);
+            font-size: 0.813rem;
+        }
+
+        .toast-title {
+            font-size: 0.813rem;
+        }
+
+        .toast-message {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+
+<script>
+    // Toast Notification System
+    const ToastManager = {
+        container: null,
+
+        init() {
+            this.container = document.getElementById('toast-container');
+            if (!this.container) {
+                this.container = document.createElement('div');
+                this.container.id = 'toast-container';
+                this.container.className = 'toast-container';
+                document.body.appendChild(this.container);
+            }
+        },
+
+        show(options) {
+            this.init();
+
+            const {
+                type = 'info', // success, info, warning, error
+                title = 'Notification',
+                message = '',
+                duration = 5000,
+                action = null,
+                link = null
+            } = options;
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            // Get icon based on type
+            const icons = {
+                success: 'fa-check-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle',
+                error: 'fa-times-circle'
+            };
+
+            toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas ${icons[type]}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+                ${action || link ? `
+                    <div class="toast-actions">
+                        ${link ? `<button class="toast-action-btn primary" onclick="window.location.href='${link}'">View</button>` : ''}
+                        ${action ? `<button class="toast-action-btn primary" onclick="${action.callback}">${action.text}</button>` : ''}
+                    </div>
+                ` : ''}
+            </div>
+            <button class="toast-close" onclick="ToastManager.dismiss(this.parentElement)">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+            // Add to container
+            this.container.appendChild(toast);
+
+            // Auto dismiss after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    this.dismiss(toast);
+                }, duration);
+            }
+
+            // Optional sound
+            this.playNotificationSound();
+
+            return toast;
+        },
+
+        dismiss(toast) {
+            toast.classList.add('removing');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            }, 300);
+        },
+
+        success(title, message, options = {}) {
+            return this.show({ type: 'success', title, message, ...options });
+        },
+
+        info(title, message, options = {}) {
+            return this.show({ type: 'info', title, message, ...options });
+        },
+
+        warning(title, message, options = {}) {
+            return this.show({ type: 'warning', title, message, ...options });
+        },
+
+        error(title, message, options = {}) {
+            return this.show({ type: 'error', title, message, ...options });
+        },
+
+        playNotificationSound() {
+            // Sound notification disabled - no audio file available
+        }
+    };
+
+    // Make ToastManager globally available
+    window.ToastManager = ToastManager;
+</script>

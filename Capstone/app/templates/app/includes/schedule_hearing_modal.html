@@ -1,0 +1,437 @@
+<!-- Schedule Hearing Modal -->
+<div id="scheduleHearingModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeHearingModal()"></div>
+    <div class="modal-container modal-lg">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <i class="fas fa-gavel"></i>
+                Schedule Formal Hearing
+            </h2>
+            <button class="modal-close" onclick="closeHearingModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="scheduleHearingForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="case_id" id="hearingCaseId" value="">
+            
+            <div class="modal-body">
+                <!-- Hearing Type & Title -->
+                <div class="form-row">
+                    <div class="form-group form-col-6">
+                        <label for="hearingType" class="form-label">
+                            <i class="fas fa-tag"></i>
+                            Hearing Type
+                        </label>
+                        <select name="hearing_type" id="hearingType" class="form-control" required>
+                            <option value="">-- Select type --</option>
+                            <option value="disciplinary">Disciplinary Hearing</option>
+                            <option value="appeal">Appeal Hearing</option>
+                            <option value="resolution">Resolution Meeting</option>
+                            <option value="investigation">Investigation Hearing</option>
+                            <option value="review">Case Review Hearing</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-col-6">
+                        <label for="hearingTitle" class="form-label">
+                            <i class="fas fa-heading"></i>
+                            Hearing Title
+                        </label>
+                        <input type="text" name="title" id="hearingTitle" class="form-control" 
+                               placeholder="e.g., Academic Misconduct Hearing" required>
+                    </div>
+                </div>
+
+                <!-- Schedule Date, Time, Duration -->
+                <div class="form-row">
+                    <div class="form-group form-col-4">
+                        <label for="hearingDate" class="form-label">
+                            <i class="fas fa-calendar"></i>
+                            Hearing Date
+                        </label>
+                        <input type="date" name="scheduled_date" id="hearingDate" class="form-control" required>
+                    </div>
+                    <div class="form-group form-col-4">
+                        <label for="hearingTime" class="form-label">
+                            <i class="fas fa-clock"></i>
+                            Start Time
+                        </label>
+                        <input type="time" name="scheduled_time" id="hearingTime" class="form-control" required>
+                    </div>
+                    <div class="form-group form-col-4">
+                        <label for="hearingDuration" class="form-label">
+                            <i class="fas fa-hourglass-half"></i>
+                            Duration (min)
+                        </label>
+                        <input type="number" name="estimated_duration" id="hearingDuration" 
+                               class="form-control" value="60" min="15" max="480" required>
+                    </div>
+                </div>
+
+                <!-- Location & Mode -->
+                <div class="form-row">
+                    <div class="form-group form-col-6">
+                        <label for="hearingLocation" class="form-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Location
+                        </label>
+                        <input type="text" name="location" id="hearingLocation" class="form-control" 
+                               placeholder="e.g., Conference Room A" required>
+                    </div>
+                    <div class="form-group form-col-6">
+                        <label for="hearingMode" class="form-label">
+                            <i class="fas fa-video"></i>
+                            Hearing Mode
+                        </label>
+                        <select name="mode" id="hearingMode" class="form-control" onchange="toggleMeetingLink()">
+                            <option value="in_person">In-Person</option>
+                            <option value="online">Online/Virtual</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Meeting Link (for online/hybrid) -->
+                <div class="form-group" id="meetingLinkGroup" style="display: none;">
+                    <label for="meetingLink" class="form-label">
+                        <i class="fas fa-link"></i>
+                        Meeting Link
+                    </label>
+                    <input type="url" name="meeting_link" id="meetingLink" class="form-control" 
+                           placeholder="https://zoom.us/j/...">
+                </div>
+
+                <hr class="form-divider">
+                <h3 class="form-section-title">Participants</h3>
+
+                <!-- Presiding Officer -->
+                <div class="form-group">
+                    <label for="presidingOfficer" class="form-label required">
+                        <i class="fas fa-user-tie"></i>
+                        Presiding Officer
+                    </label>
+                    <input type="text" name="presiding_officer_name" id="presidingOfficer" 
+                           class="form-control" placeholder="e.g., Dr. John Smith" required>
+                    <small class="form-help">Person who will conduct the hearing</small>
+                </div>
+
+                <!-- Panel Members -->
+                <div class="form-group">
+                    <label for="panelMembers" class="form-label">
+                        <i class="fas fa-users"></i>
+                        Panel Members
+                    </label>
+                    <textarea name="panel_members_names" id="panelMembers" class="form-control" 
+                              rows="3" placeholder="Enter panel member names, one per line"></textarea>
+                    <small class="form-help">Committee members or decision-making panel (one name per line)</small>
+                </div>
+
+                <!-- Respondent -->
+                <div class="form-group">
+                    <label for="respondent" class="form-label required">
+                        <i class="fas fa-user"></i>
+                        Respondent (Student)
+                    </label>
+                    <select name="respondent" id="respondent" class="form-control" required>
+                        <option value="">-- Select respondent --</option>
+                    </select>
+                    <small class="form-help">Student or person being heard</small>
+                </div>
+
+                <!-- Complainant -->
+                <div class="form-group">
+                    <label for="complainant" class="form-label">
+                        <i class="fas fa-user-check"></i>
+                        Complainant (Optional)
+                    </label>
+                    <select name="complainant" id="complainant" class="form-control">
+                        <option value="">-- None --</option>
+                    </select>
+                    <small class="form-help">Person filing the complaint (if applicable)</small>
+                </div>
+
+                <!-- Witnesses -->
+                <div class="form-group">
+                    <label for="witnesses" class="form-label">
+                        <i class="fas fa-users"></i>
+                        Witnesses
+                        <span class="form-hint">Hold Ctrl/Cmd to select multiple</span>
+                    </label>
+                    <select name="witnesses" id="witnesses" class="form-control" multiple size="3">
+                    </select>
+                </div>
+
+                <!-- Advisors -->
+                <div class="form-group">
+                    <label for="advisors" class="form-label">
+                        <i class="fas fa-user-friends"></i>
+                        Advisors/Support Persons
+                        <span class="form-hint">Hold Ctrl/Cmd to select multiple</span>
+                    </label>
+                    <select name="advisors" id="advisors" class="form-control" multiple size="3">
+                    </select>
+                    <small class="form-help">Parents, guardians, or support persons</small>
+                </div>
+
+                <hr class="form-divider">
+                <h3 class="form-section-title">Details</h3>
+
+                <!-- Agenda -->
+                <div class="form-group">
+                    <label for="agenda" class="form-label required">
+                        <i class="fas fa-list"></i>
+                        Hearing Agenda
+                    </label>
+                    <textarea name="agenda" id="agenda" class="form-control" rows="4" 
+                              placeholder="Outline of proceedings, topics to cover..." required></textarea>
+                </div>
+
+                <!-- Charges -->
+                <div class="form-group">
+                    <label for="charges" class="form-label">
+                        <i class="fas fa-file-alt"></i>
+                        Charges/Allegations (Optional)
+                    </label>
+                    <textarea name="charges" id="charges" class="form-control" rows="3" 
+                              placeholder="Formal charges or allegations (for disciplinary hearings)"></textarea>
+                </div>
+
+                <!-- Notifications -->
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="send_notifications" id="sendHearingNotifications" checked>
+                        <span>Send notifications to all participants</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeHearingModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-gavel"></i>
+                    Schedule Hearing
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Hearing Modal Control Functions
+function openHearingModal(caseId = null) {
+    const modal = document.getElementById('scheduleHearingModal');
+    const form = document.getElementById('scheduleHearingForm');
+    
+    if (caseId) {
+        document.getElementById('hearingCaseId').value = caseId;
+    }
+    
+    form.action = '/counselor/hearing/schedule/';
+    
+    // Load data
+    loadHearingParticipants();
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('hearingDate').min = today;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeHearingModal() {
+    const modal = document.getElementById('scheduleHearingModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('scheduleHearingForm').reset();
+}
+
+function toggleMeetingLink() {
+    const mode = document.getElementById('hearingMode').value;
+    const linkGroup = document.getElementById('meetingLinkGroup');
+    
+    if (mode === 'online' || mode === 'hybrid') {
+        linkGroup.style.display = 'block';
+        document.getElementById('meetingLink').required = (mode === 'online');
+    } else {
+        linkGroup.style.display = 'none';
+        document.getElementById('meetingLink').required = false;
+    }
+}
+
+async function loadHearingParticipants() {
+    try {
+        // Load students for respondent
+        const studentsResp = await fetch('/api/students/');
+        const students = await studentsResp.json();
+        
+        const respondentSelect = document.getElementById('respondent');
+        respondentSelect.innerHTML = '<option value="">-- Select respondent --</option>';
+        
+        students.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.id;
+            option.textContent = `${student.name} (${student.student_number})`;
+            respondentSelect.appendChild(option);
+        });
+        
+        // Load all profiles for complainant, witnesses, advisors
+        const profilesResp = await fetch('/api/profiles/');
+        const profiles = await profilesResp.json();
+        
+        const complainantSelect = document.getElementById('complainant');
+        const witnessesSelect = document.getElementById('witnesses');
+        const advisorsSelect = document.getElementById('advisors');
+        
+        complainantSelect.innerHTML = '<option value="">-- None --</option>';
+        witnessesSelect.innerHTML = '';
+        advisorsSelect.innerHTML = '';
+        
+        profiles.forEach(profile => {
+            const option1 = document.createElement('option');
+            option1.value = profile.id;
+            option1.textContent = `${profile.name} (${profile.type})`;
+            complainantSelect.appendChild(option1.cloneNode(true));
+            
+            const option2 = document.createElement('option');
+            option2.value = profile.id;
+            option2.textContent = `${profile.name} (${profile.type})`;
+            witnessesSelect.appendChild(option2);
+            
+            const option3 = document.createElement('option');
+            option3.value = profile.id;
+            option3.textContent = `${profile.name} (${profile.type})`;
+            advisorsSelect.appendChild(option3);
+        });
+        
+    } catch (error) {
+        console.error('Error loading participants:', error);
+    }
+}
+
+// Handle form submission
+document.getElementById('scheduleHearingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scheduling...';
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            if (window.ToastManager) {
+                ToastManager.success('Hearing Scheduled', result.message || 'Hearing scheduled successfully');
+            }
+            
+            closeHearingModal();
+            
+            setTimeout(() => {
+                window.location.href = result.redirect || window.location.href;
+            }, 1000);
+        } else {
+            if (window.ToastManager) {
+                ToastManager.error('Error', result.message || 'Failed to schedule hearing');
+            }
+            alert(result.message || 'Failed to schedule hearing');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (window.ToastManager) {
+            ToastManager.error('Error', 'An error occurred while scheduling the hearing');
+        }
+        alert('An error occurred while scheduling the hearing');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-gavel"></i> Schedule Hearing';
+    }
+});
+
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeHearingModal();
+    }
+});
+</script>
+
+<style>
+.modal-lg {
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.form-divider {
+    margin: var(--spacing-lg) 0;
+    border: none;
+    border-top: 2px solid var(--border-color);
+}
+
+.form-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.form-section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: var(--primary-green);
+    border-radius: 2px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .modal-lg {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-body {
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-section-title {
+        font-size: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.875rem;
+    }
+    
+    .form-control {
+        font-size: 0.875rem;
+    }
+}
+</style>

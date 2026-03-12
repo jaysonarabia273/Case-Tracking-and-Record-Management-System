@@ -1,0 +1,292 @@
+/* Unified Student Sidebar Styles - Override all page-specific styles */
+
+.sidebar {
+    width: 280px !important;
+    background: linear-gradient(180deg, #1a4d2e 0%, #2d5f3f 100%) !important;
+    color: white !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1) !important;
+    z-index: 100 !important;
+    overflow-y: auto !important;
+}
+
+/* Profile Section */
+.profile-container,
+.sidebar-profile {
+    padding: 2rem 1rem !important;
+    text-align: center !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    margin-bottom: 1rem !important;
+}
+
+.profile-pic,
+.profile-image {
+    width: 90px !important;
+    height: 90px !important;
+    background-color: rgba(255,255,255,0.9) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border-radius: 50% !important;
+    margin: 0 auto 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid #4a9d6f !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.profile-pic i,
+.profile-image i {
+    font-size: 40px !important;
+    color: #1a4d2e !important;
+}
+
+.profile-container h3,
+.sidebar-profile h3 {
+    font-size: 1.2rem !important;
+    margin: 0.5rem 0 !important;
+    font-weight: 600 !important;
+    color: white !important;
+    text-shadow: none !important;
+}
+
+.profile-container p,
+.sidebar-profile p {
+    font-size: 0.9rem !important;
+    color: rgba(255,255,255,0.8) !important;
+    margin: 0 !important;
+}
+
+/* Menu Section */
+.menu,
+.sidebar-menu {
+    flex: 1 !important;
+    padding: 0.5rem 0 !important;
+}
+
+.menu-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.9rem 1.5rem !important;
+    color: rgba(255,255,255,0.8) !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    gap: 1rem !important;
+    border-left: 4px solid transparent !important;
+    border-right: none !important;
+    background: none !important;
+}
+
+.menu-item::before {
+    display: none !important;
+}
+
+.menu-item .icon {
+    width: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+}
+
+.menu-item span:not(.icon) {
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+}
+
+.menu-item i {
+    font-size: 1.1rem !important;
+}
+
+.menu-item:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+    color: white !important;
+    border-left-color: #4a9d6f !important;
+    transform: none !important;
+}
+
+.menu-item.active {
+    background-color: rgba(255,255,255,0.15) !important;
+    color: white !important;
+    border-left-color: #4a9d6f !important;
+    font-weight: 600 !important;
+}
+
+.menu-item:hover .icon,
+.menu-item.active .icon,
+.menu-item:hover i,
+.menu-item.active i {
+    color: #4a9d6f !important;
+}
+
+/* Logout Button */
+.sidebar-footer {
+    padding: 1rem !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    margin-top: auto !important;
+}
+
+.logout-btn {
+    width: 100% !important;
+    padding: 0.9rem 1.5rem !important;
+    background-color: rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.8) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}
+
+.logout-btn .icon,
+.logout-btn i {
+    width: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 0 !important;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b !important;
+    color: white !important;
+    transform: none !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .profile-pic {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .profile-pic i {
+        font-size: 30px;
+    }
+    
+    .profile-container h3 {
+        font-size: 1rem;
+    }
+    
+    .menu-item {
+        padding: 0.8rem 1rem;
+    }
+}
+
+/* FORCE OVERRIDE - Maximum specificity */
+.sidebar .profile-container h3,
+.sidebar .sidebar-profile h3,
+div.sidebar .profile-container h3,
+div.sidebar .sidebar-profile h3 {
+    font-size: 1.2rem !important;
+    margin: 0.5rem 0 !important;
+    font-weight: 600 !important;
+    color: white !important;
+    text-shadow: none !important;
+    font-family: inherit !important;
+}
+
+.sidebar .profile-container p,
+.sidebar .sidebar-profile p,
+div.sidebar .profile-container p,
+div.sidebar .sidebar-profile p {
+    font-size: 0.9rem !important;
+    color: rgba(255,255,255,0.8) !important;
+    margin: 0 !important;
+    font-family: inherit !important;
+}
+
+/* Force logout button consistency */
+.sidebar .logout-btn,
+.sidebar form .logout-btn,
+.sidebar .sidebar-footer .logout-btn,
+div.sidebar .logout-btn,
+div.sidebar form .logout-btn {
+    width: 100% !important;
+    padding: 0.9rem 1.5rem !important;
+    background-color: rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.8) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+.sidebar .logout-btn::before,
+.sidebar form .logout-btn::before {
+    display: none !important;
+    content: none !important;
+}
+
+.sidebar .logout-btn:hover,
+.sidebar form .logout-btn:hover {
+    background-color: #c0392b !important;
+    color: white !important;
+    transform: none !important;
+}
+
+/* Force menu-item consistency */
+.sidebar .menu-item,
+.sidebar .menu .menu-item,
+.sidebar .sidebar-menu .menu-item,
+div.sidebar a.menu-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.9rem 1.5rem !important;
+    color: rgba(255,255,255,0.8) !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    gap: 1rem !important;
+    border-left: 4px solid transparent !important;
+    border-right: none !important;
+    background: none !important;
+    margin: 0 !important;
+}
+
+.sidebar .menu-item.active,
+.sidebar .menu .menu-item.active,
+div.sidebar a.menu-item.active {
+    background-color: rgba(255,255,255,0.15) !important;
+    color: white !important;
+    border-left-color: #4a9d6f !important;
+    font-weight: 600 !important;
+}
+
+.sidebar .menu-item:hover,
+.sidebar .menu .menu-item:hover,
+div.sidebar a.menu-item:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+    color: white !important;
+    border-left-color: #4a9d6f !important;
+    transform: none !important;
+}

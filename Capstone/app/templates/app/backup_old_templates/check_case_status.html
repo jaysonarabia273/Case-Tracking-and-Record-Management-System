@@ -1,0 +1,653 @@
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/student_sidebar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/check_case_status.css' %}">
+{% endblock %}
+
+<style>
+    :root {
+    --primary: #0e6534;
+    --primary-dark: #064a2c;
+    --secondary: #2b7dab;
+    --accent: #f9bc60;
+    --light-bg: #f8f9fa;
+    --dark-text: #2d3748;
+    --light-text: #f7f9fc;
+    --shadow: 0 5px 15px rgba(0,0,0,0.08);
+    --card-radius: 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--light-bg);
+}
+
+.sidebar {
+    width: 250px;
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+    color: var(--light-text);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-height: 100vh;
+    box-shadow: var(--shadow);
+    z-index: 100;
+}
+
+.profile {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
+
+.profile-img {
+            width: 90px;
+            height: 90px;
+            background-image: url('static/Images/def_prof_pic.png');
+            background-color: rgba(255,255,255,0.9);
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--accent);
+}
+.profile-img i {
+            font-size: 40px;
+            color: var(--primary);
+            
+        }
+
+.menu {
+    flex: 1;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.2rem;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin: 0.25rem 0.6rem;
+    cursor: pointer;
+}
+
+.menu-item.active {
+    background-color: rgba(255,255,255,0.15);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    border-right: 4px solid var(--accent);
+    border-left: 4px solid var(--accent);
+}
+
+.menu-item:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    transform: translateX(5px);
+}
+
+.menu-item .icon {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+.logout-btn {
+            margin: 20px;
+            padding: 12px;
+            background-color: #c53030;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-top: auto;
+}
+
+.logout-btn:hover {
+            background-color: #9b2c2c;
+            transform: translateY(-2px);
+}
+
+.logout-btn i {
+    margin-right: 8px;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 240px;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background-color: white;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.top-header h1 {
+    color: var(--primary);
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.user-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.notifications, .messages {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(15, 110, 67, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 20px;
+    position: relative;
+}
+
+.notifications:hover, .messages:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #d32f2f;
+    color: white;
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    background-color: white;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+
+.card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    transform: translateY(-5px);
+}
+
+.section-header {
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary);
+    padding-left: 15px;
+}
+
+.section-header h2 {
+    color: var(--dark-text);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(14, 101, 52, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-submit {
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-submit:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Case Details Styling */
+.case-details {
+    padding: 15px 0;
+}
+
+.case-details h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 8px;
+}
+
+.detail-label {
+    width: 140px;
+    font-weight: 600;
+    color: #555;
+}
+
+.detail-value {
+    flex: 1;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.status-warning {
+    background-color: #f59e0b;
+}
+
+.status-success {
+    background-color: #10b981;
+}
+
+.status-secondary {
+    background-color: #64748b;
+}
+
+/* Timeline styling */
+.timeline {
+    position: relative;
+    margin: 20px 0;
+    padding-left: 30px;
+}
+
+.timeline:before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #e0e0e0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px rgba(14, 101, 52, 0.2);
+}
+
+.timeline-content {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.timeline-text {
+    font-size: 14px;
+}
+
+.alert-message {
+    margin-top: 20px;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #dc2626;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+        overflow: hidden;
+    }
+    
+    .profile h3, 
+    .profile p, 
+    .menu-item span:not(.icon) {
+        display: none;
+    }
+    
+    .profile-img {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 0;
+    }
+    
+    .menu-item {
+        justify-content: center;
+        padding: 0.75rem;
+    }
+    
+    .menu-item .icon {
+        margin-right: 0;
+    }
+    
+    .logout-btn span {
+        display: none;
+    }
+    
+    .logout-btn {
+        justify-content: center;
+        padding: 12px 0;
+    }
+    
+    .logout-btn i {
+        margin-right: 0;
+    }
+    
+    .main-content {
+        margin-left: 70px;
+        padding: 1.5rem;
+    }
+}
+</style>
+
+{% block content %}
+{% include 'app/includes/student_sidebar.html' %}
+
+<div class="main-content">
+    <div class="top-header">
+        <h1 class="page-title">Check Case Status</h1>
+        <div class="user-controls">
+            <div class="notifications">
+                <i class="fas fa-bell"></i>
+                <span class="badge">2</span>
+            </div>
+            <div class="messages">
+                <i class="fas fa-envelope"></i>
+                <span class="badge">3</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="section-header">
+            <h2>Enter Case Information</h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="{% url 'check_status' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="case_number">Case Number/ID:</label>
+                    <input type="text" class="form-control" id="case_number" name="case_number" placeholder="Enter your case ID number" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Check Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if case and case_type == 'regular_case' %}
+    <div class="card">
+        <div class="section-header">
+            <h2>Case Details</h2>
+        </div>
+        
+        <div class="card-body">
+            <div class="case-details">
+                <h3>Case #{{ case.id }}</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Title:</div>
+                    <div class="detail-value">{{ case.title }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Description:</div>
+                    <div class="detail-value">{{ case.description }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Counselor:</div>
+                    <div class="detail-value">Dr. {{ case.counselor.user.first_name }} {{ case.counselor.user.last_name }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">
+                        <span class="status-badge 
+                            {% if case.status == 'in_progress' %}status-warning
+                            {% elif case.status == 'resolved' %}status-success
+                            {% elif case.status == 'pending' %}status-secondary
+                            {% elif case.status == 'under_review' %}status-info
+                            {% endif %}">
+                            {% if case.status == 'in_progress' %}In Progress
+                            {% elif case.status == 'under_review' %}Under Review
+                            {% elif case.status == 'resolved' %}Resolved
+                            {% elif case.status == 'pending' %}Pending
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Created:</div>
+                    <div class="detail-value">{{ case.created_at|date:"F d, Y g:i A" }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Last Updated:</div>
+                    <div class="detail-value">{{ case.updated_at|date:"F d, Y g:i A" }}</div>
+                </div>
+            </div>
+
+            {% if comments %}
+            <div class="section-header" style="margin-top: 20px;">
+                <h2>Case Comments</h2>
+            </div>
+            <div class="timeline">
+                {% for comment in comments %}
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <p class="timeline-date">{{ comment.created_at|date:"F d, Y g:i A" }} - {{ comment.user.first_name }} {{ comment.user.last_name }}</p>
+                        <p class="timeline-text">{{ comment.comment }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% elif case and case_type == 'guidance_session' %}
+    <div class="card">
+        <div class="section-header">
+            <h2>Guidance Session Details</h2>
+        </div>
+        
+        <div class="card-body">
+            <div class="case-details">
+                <h3>Guidance Session #{{ case.id }}</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Reason:</div>
+                    <div class="detail-value">{{ case.get_reason_display }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Description:</div>
+                    <div class="detail-value">{{ case.concern_description }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Preferred Date:</div>
+                    <div class="detail-value">{{ case.preferred_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Preferred Time:</div>
+                    <div class="detail-value">{{ case.get_preferred_time_display }}</div>
+                </div>
+                {% if case.preferred_counselor %}
+                <div class="detail-row">
+                    <div class="detail-label">Preferred Counselor:</div>
+                    <div class="detail-value">Dr. {{ case.preferred_counselor.user.first_name }} {{ case.preferred_counselor.user.last_name }}</div>
+                </div>
+                {% endif %}
+                {% if case.assigned_counselor %}
+                <div class="detail-row">
+                    <div class="detail-label">Assigned Counselor:</div>
+                    <div class="detail-value">Dr. {{ case.assigned_counselor.user.first_name }} {{ case.assigned_counselor.user.last_name }}</div>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">
+                        <span class="status-badge 
+                            {% if case.status == 'approved' %}status-warning
+                            {% elif case.status == 'completed' %}status-success
+                            {% elif case.status == 'pending' %}status-secondary
+                            {% elif case.status == 'canceled' %}status-danger
+                            {% endif %}">
+                            {% if case.status == 'pending' %}Pending Approval
+                            {% elif case.status == 'approved' %}Approved
+                            {% elif case.status == 'completed' %}Completed
+                            {% elif case.status == 'canceled' %}Canceled
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% if case.scheduled_date and case.scheduled_time %}
+                <div class="detail-row">
+                    <div class="detail-label">Scheduled Date:</div>
+                    <div class="detail-value">{{ case.scheduled_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Scheduled Time:</div>
+                    <div class="detail-value">{{ case.get_scheduled_time_display }}</div>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <div class="detail-label">Created:</div>
+                    <div class="detail-value">{{ case.created_at|date:"F d, Y g:i A" }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Last Updated:</div>
+                    <div class="detail-value">{{ case.updated_at|date:"F d, Y g:i A" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% elif form_submitted %}
+    <div class="alert-message">
+        <div class="alert-danger">
+            No case found with that case number. Please check and try again.
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    // Handle sidebar toggle for mobile view
+    $(document).ready(function() {
+        $("#menuToggle").click(function() {
+            $(".sidebar").toggleClass("active");
+        });
+        
+        // Handle responsive behavior
+        function handleResponsive() {
+            if (window.innerWidth <= 768) {
+                $(".sidebar").addClass("compact");
+            } else {
+                $(".sidebar").removeClass("compact");
+            }
+        }
+        
+        // Apply on page load and window resize
+        handleResponsive();
+        $(window).resize(handleResponsive);
+    });
+</script>
+{% endblock %}
+{% endblock %}

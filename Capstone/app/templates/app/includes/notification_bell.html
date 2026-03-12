@@ -1,0 +1,86 @@
+{% load static %}
+<div class="notification-wrapper" style="position: relative;">
+    <div class="notification-bell" onclick="toggleNotifications()">
+        <i class="fas fa-bell" style="font-size: 1.25rem;"></i>
+        {% if unread_count > 0 %}
+        <span class="notification-count">{{ unread_count }}</span>
+        {% endif %}
+    </div>
+    
+    <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-header">
+            <span>Notifications</span>
+            {% if unread_count > 0 %}
+            <button onclick="markAllRead()" style="background: none; border: none; color: white; cursor: pointer; font-size: 0.75rem;">
+                Mark all read
+            </button>
+            {% endif %}
+        </div>
+        <div class="notification-list">
+            {% if notifications %}
+                {% for notif in notifications %}
+                <div class="notification-item {% if not notif.is_read %}unread{% endif %}" 
+                     onclick="handleNotificationClick({{ notif.id }}, '{{ notif.link }}')">
+                    <div class="notification-item-title">{{ notif.title }}</div>
+                    <div class="notification-item-message">{{ notif.message|truncatewords:15 }}</div>
+                    <div class="notification-item-time">{{ notif.created_at|timesince }} ago</div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div style="padding: var(--spacing-xl); text-align: center; color: var(--text-secondary);">
+                <i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.5; margin-bottom: var(--spacing-sm);"></i>
+                <p style="margin: 0; font-size: 0.875rem;">No notifications</p>
+            </div>
+            {% endif %}
+        </div>
+        {% if notifications %}
+        <div style="padding: var(--spacing-sm); text-align: center; border-top: 1px solid var(--border-color);">
+            <a href="{% url 'view_all_notifications' %}" style="color: var(--primary-green); text-decoration: none; font-size: 0.875rem;">
+                View All Notifications
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    dropdown.classList.toggle('show');
+}
+
+function handleNotificationClick(notifId, link) {
+    // Mark as read
+    fetch(`/notifications/${notifId}/mark-read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    }).then(() => {
+        if (link) {
+            window.location.href = link;
+        }
+    });
+}
+
+function markAllRead() {
+    fetch('/notifications/mark-all-read/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    }).then(() => {
+        location.reload();
+    });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const wrapper = event.target.closest('.notification-wrapper');
+    if (!wrapper) {
+        document.getElementById('notificationDropdown').classList.remove('show');
+    }
+});
+</script>

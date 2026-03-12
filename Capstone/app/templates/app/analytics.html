@@ -1,0 +1,479 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'app/dashboard.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'app/analytics.css' %}">
+    <style>
+   
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Profile Section -->
+            <div class="profile">
+                <div class="profile-img">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3>{{user_name}}</h3>
+                <p>Faculty Member</p>
+            </div>
+            
+            <!-- Menu Items -->
+            <div class="menu">
+                <a href="{% url 'dashboard' %}" class="menu-item">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'student_case' %}" class="menu-item">
+                    <span class="icon">📋</span>
+                    <span>Student's Cases</span>
+                </a>
+                <a href="{% url 'evaluation' %}" class="menu-item">
+                    <span class="icon">📝</span>
+                    <span>Evaluations</span>
+                </a>
+                <a href="{% url 'student_list' %}" class="menu-item">
+                    <span class="icon">👥</span>
+                    <span>Students</span>
+                </a>
+
+                <a href="{% url 'create_session' %}" class="menu-item">
+                    <span class="icon">➕</span>
+                    <span>Create Session</span>
+                </a>
+
+                 <a href="{% url 'session_created' %}" class="menu-item active">
+                    <span class="icon">📅</span>
+                    <span>Created Cases</span>
+                </a>
+
+                <a href="{% url 'analytics' %}" class="menu-item active">
+                    <span class="icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+            
+            <!-- Logout -->
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">
+                    <i>🚪</i> Log Out
+                </button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="analytics-container">
+                <!-- Header -->
+                <div class="analytics-header">
+                    <h1 class="analytics-title">Analytics Dashboard</h1>
+                    <button class="generate-report-btn" onclick="generatePDFReport()">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                        <div class="loading-spinner" id="loadingSpinner"></div>
+                    </button>
+                </div>
+
+                <!-- Time Filter -->
+                <div class="time-filter">
+                    <button class="filter-btn active" onclick="filterData('7days')">Last 7 Days</button>
+                    <button class="filter-btn" onclick="filterData('30days')">Last 30 Days</button>
+                    <button class="filter-btn" onclick="filterData('90days')">Last 3 Months</button>
+                    <button class="filter-btn" onclick="filterData('year')">This Year</button>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCases">{{ total_cases|default:156 }}</div>
+                        <div class="stat-label">Total Cases</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeCases">{{ active_count|default:23 }}</div>
+                        <div class="stat-label">Active Cases</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completedCases">{{ completed_count|default:89 }}</div>
+                        <div class="stat-label">Completed Cases</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="successRate">72%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Line Chart -->
+                    <div class="chart-container">
+                        <h3 class="chart-title">Case Trends Over Time</h3>
+                        <canvas id="lineChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <!-- Pie Chart -->
+                    <div class="chart-container">
+                        <h3 class="chart-title">Case Status Distribution</h3>
+                        <canvas id="pieChart" width="300" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Additional Charts -->
+                <div class="charts-grid">
+                    <!-- Student Progress Chart -->
+                    <div class="chart-container">
+                        <h3 class="chart-title">Monthly Case Volume</h3>
+                        <canvas id="barChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <!-- Counselor Effectiveness -->
+                    <div class="chart-container">
+                        <h3 class="chart-title">Counseling Effectiveness</h3>
+                        <canvas id="radarChart" width="300" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Insights Section -->
+                <div class="insights-section">
+                    <h3 class="insights-title">Key Insights & Recommendations</h3>
+                    <div class="insight-item">
+                        <div class="insight-text">
+                            <strong>Case Resolution Trend:</strong> Case completion rate has improved by 15% over the last month, indicating effective counseling strategies.
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-text">
+                            <strong>Peak Activity:</strong> Most cases are submitted on Mondays and Tuesdays. Consider increasing counselor availability during these days.
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-text">
+                            <strong>Student Engagement:</strong> Students with guidance sessions show 23% higher case resolution rates compared to regular counseling cases.
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-text">
+                            <strong>Recommendation:</strong> Academic concerns represent 40% of all cases. Consider implementing proactive academic support programs.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - replace with actual data from your Django backend
+        const sampleData = {
+            caseTrends: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                pending: [12, 15, 18, 14, 16, 20, 18, 22, 19, 17, 21, 23],
+                ongoing: [8, 12, 15, 18, 16, 14, 17, 19, 21, 18, 16, 20],
+                completed: [25, 28, 32, 35, 38, 42, 45, 48, 52, 55, 58, 62]
+            },
+            caseDistribution: {
+                pending: 23,
+                ongoing: 20,
+                completed: 89,
+                under_review: 12
+            }
+        };
+
+        // Initialize charts
+        let lineChart, pieChart, barChart, radarChart;
+
+        function initializeCharts() {
+            // Line Chart - Case Trends
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: sampleData.caseTrends.labels,
+                    datasets: [
+                        {
+                            label: 'Pending Cases',
+                            data: sampleData.caseTrends.pending,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Ongoing Cases',
+                            data: sampleData.caseTrends.ongoing,
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Completed Cases',
+                            data: sampleData.caseTrends.completed,
+                            borderColor: '#45b7d1',
+                            backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Pie Chart - Case Status Distribution
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending', 'Ongoing', 'Under Review'],
+                    datasets: [{
+                        data: [
+                            sampleData.caseDistribution.completed,
+                            sampleData.caseDistribution.pending,
+                            sampleData.caseDistribution.ongoing,
+                            sampleData.caseDistribution.under_review
+                        ],
+                        backgroundColor: [
+                            '#45b7d1',
+                            '#ff6b6b',
+                            '#4ecdc4',
+                            '#f7b731'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Bar Chart - Monthly Volume
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Cases Created',
+                        data: [45, 52, 38, 67, 59, 71],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Radar Chart - Counseling Effectiveness
+            const radarCtx = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Response Time', 'Resolution Rate', 'Student Satisfaction', 'Follow-up Quality', 'Communication'],
+                    datasets: [{
+                        label: 'Performance',
+                        data: [85, 78, 92, 88, 90],
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: '#667eea',
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterData(period) {
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Here you would typically make an AJAX call to get filtered data
+            // For demo purposes, we'll just update with sample data
+            updateChartsWithFilteredData(period);
+        }
+
+        function updateChartsWithFilteredData(period) {
+            // Sample filtered data update
+            let multiplier = period === '7days' ? 0.3 : period === '30days' ? 0.7 : period === '90days' ? 1.2 : 1.5;
+            
+            // Update line chart
+            lineChart.data.datasets.forEach(dataset => {
+                dataset.data = dataset.data.map(value => Math.round(value * multiplier));
+            });
+            lineChart.update();
+
+            // Update stats
+            document.getElementById('totalCases').textContent = Math.round(156 * multiplier);
+            document.getElementById('activeCases').textContent = Math.round(23 * multiplier);
+            document.getElementById('completedCases').textContent = Math.round(89 * multiplier);
+        }
+
+        function generatePDFReport() {
+            const button = document.querySelector('.generate-report-btn');
+            const spinner = document.getElementById('loadingSpinner');
+            
+            // Show loading state
+            button.disabled = true;
+            spinner.style.display = 'inline-block';
+            
+            setTimeout(() => {
+                // Create PDF using jsPDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Add title
+                pdf.setFontSize(22);
+                pdf.setTextColor(44, 62, 80);
+                pdf.text('Counseling Analytics Report', 20, 25);
+                
+                // Add date
+                pdf.setFontSize(12);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+                
+                // Add statistics
+                pdf.setFontSize(16);
+                pdf.setTextColor(44, 62, 80);
+                pdf.text('Key Statistics', 20, 50);
+                
+                pdf.setFontSize(12);
+                pdf.setTextColor(60, 60, 60);
+                const stats = [
+                    `Total Cases: ${document.getElementById('totalCases').textContent}`,
+                    `Active Cases: ${document.getElementById('activeCases').textContent}`,
+                    `Completed Cases: ${document.getElementById('completedCases').textContent}`,
+                    `Success Rate: ${document.getElementById('successRate').textContent}`
+                ];
+                
+                stats.forEach((stat, index) => {
+                    pdf.text(stat, 20, 60 + (index * 8));
+                });
+                
+                // Add insights
+                pdf.setFontSize(16);
+                pdf.setTextColor(44, 62, 80);
+                pdf.text('Key Insights', 20, 100);
+                
+                pdf.setFontSize(10);
+                pdf.setTextColor(60, 60, 60);
+                const insights = [
+                    '• Case completion rate improved by 15% over the last month',
+                    '• Peak activity occurs on Mondays and Tuesdays',
+                    '• Students with guidance sessions show 23% higher resolution rates',
+                    '• Academic concerns represent 40% of all cases'
+                ];
+                
+                insights.forEach((insight, index) => {
+                    const lines = pdf.splitTextToSize(insight, 170);
+                    pdf.text(lines, 20, 110 + (index * 15));
+                });
+                
+                // Add recommendations
+                pdf.setFontSize(16);
+                pdf.setTextColor(44, 62, 80);
+                pdf.text('Recommendations', 20, 170);
+                
+                pdf.setFontSize(10);
+                pdf.setTextColor(60, 60, 60);
+                const recommendations = [
+                    '• Increase counselor availability on Mondays and Tuesdays',
+                    '• Implement proactive academic support programs',
+                    '• Promote guidance session participation among students',
+                    '• Continue current counseling strategies for sustained improvement'
+                ];
+                
+                recommendations.forEach((rec, index) => {
+                    const lines = pdf.splitTextToSize(rec, 170);
+                    pdf.text(lines, 20, 180 + (index * 15));
+                });
+                
+                // Add footer
+                pdf.setFontSize(8);
+                pdf.setTextColor(150, 150, 150);
+                pdf.text('This report was automatically generated by the Counseling Analytics System', 20, 280);
+                
+                // Save the PDF
+                pdf.save(`counseling-analytics-report-${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                // Reset button state
+                button.disabled = false;
+                spinner.style.display = 'none';
+                
+                // Show success message
+                alert('Report generated successfully!');
+            }, 2000);
+        }
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case #{{ case.id }} - Case Tracking System</title>
+    <link rel="stylesheet" href="{% static 'app/student_unified.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    {% include 'app/includes/student_sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="{% url 'student_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+                <span class="separator">/</span>
+                <a href="{% url 'student_cases_only' %}">My Cases</a>
+                <span class="separator">/</span>
+                <span>Case #{{ case.id }}</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-folder-open"></i>
+                        Case #{{ case.id }}
+                    </h1>
+                    <p class="page-subtitle">Detailed view of your case</p>
+                </div>
+            </div>
+
+            <!-- Case Details Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Case Information</h2>
+                </div>
+                <div class="card-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Title:</span>
+                            <span class="detail-value">{{ case.title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value">
+                                {% if case.status == 'pending' %}
+                                <span class="badge badge-pending">Pending</span>
+                                {% elif case.status == 'in_progress' %}
+                                <span class="badge badge-in-progress">In Progress</span>
+                                {% elif case.status == 'resolved' %}
+                                <span class="badge badge-completed">Resolved</span>
+                                {% else %}
+                                <span class="badge badge-draft">{{ case.status|title }}</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Counselor:</span>
+                            <span class="detail-value">
+                                {% if case.counselor %}
+                                {{ case.counselor.user.get_full_name|default:case.counselor.user.username }}
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created:</span>
+                            <span class="detail-value">{{ case.created_at|date:"F d, Y g:i A" }}</span>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <span class="detail-label">Description:</span>
+                            <span class="detail-value">{{ case.description }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linked Sessions -->
+            <div class="card" style="margin-top: var(--spacing-lg);">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-comments"></i>
+                        Related Sessions ({{ linked_sessions.count }})
+                    </h2>
+                    <a href="{% url 'schedule_session' %}?case_id={{ case.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Request Session for This Case
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if linked_sessions %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Scheduled</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in linked_sessions %}
+                                <tr>
+                                    <td><strong>#{{ session.id }}</strong></td>
+                                    <td>
+                                        <a href="{% url 'session_detail_view' session.id %}" style="color: var(--primary-green); text-decoration: none;">
+                                            {{ session.get_reason_display }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if session.status == 'pending' %}
+                                        <span class="badge badge-pending">Pending</span>
+                                        {% elif session.status == 'approved' %}
+                                        <span class="badge badge-in-progress">Scheduled</span>
+                                        {% elif session.status == 'completed' %}
+                                        <span class="badge badge-completed">Completed</span>
+                                        {% else %}
+                                        <span class="badge badge-draft">{{ session.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if session.scheduled_date %}
+                                        {{ session.scheduled_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-muted">TBD</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ session.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-comments"></i></div>
+                        <h3 class="empty-state-title">No Sessions Yet</h3>
+                        <p class="empty-state-text">No guidance sessions have been linked to this case yet.</p>
+                        <a href="{% url 'schedule_session' %}?case_id={{ case.id }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Request Session
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div style="margin-top: var(--spacing-lg);">
+                <a href="{% url 'student_cases_only' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to My Cases
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            if ($(window).width() <= 768) {
+                $('.sidebar').removeClass('active');
+                const toggle = $('<button class="mobile-toggle"><i class="fas fa-bars"></i></button>');
+                $('.main-content').prepend(toggle);
+                toggle.on('click', function() { $('.sidebar').toggleClass('active'); });
+            }
+        });
+    </script>
+</body>
+</html>

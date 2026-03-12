@@ -1,0 +1,32 @@
+{% if messages %}
+<div id="toast-container" style="position: fixed; right: 20px; bottom: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px;">
+    {% for message in messages %}
+    <div class="toast-item" data-level="{{ message.tags }}" style="min-width: 260px; max-width: 380px; background: #fff; border-left: 4px solid {% if 'success' in message.tags %}#28a745{% elif 'error' in message.tags or 'danger' in message.tags %}#dc3545{% elif 'warning' in message.tags %}#ffc107{% else %}#2b7dab{% endif %}; box-shadow: 0 6px 18px rgba(0,0,0,0.15); border-radius: 8px; padding: 12px 14px; font-size: 14px; color: #212529; opacity: 0; transform: translateY(10px); transition: all 0.25s ease;">
+        <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="font-weight: 600;">
+                {% if 'success' in message.tags %}Success{% elif 'error' in message.tags or 'danger' in message.tags %}Error{% elif 'warning' in message.tags %}Warning{% else %}Info{% endif %}
+            </div>
+            <button onclick="this.closest('.toast-item').remove()" style="border:none; background:transparent; cursor:pointer; font-size:16px;">×</button>
+        </div>
+        <div style="margin-top:6px; line-height:1.4;">{{ message }}</div>
+    </div>
+    {% endfor %}
+</div>
+<script>
+(function(){
+  const toasts = document.querySelectorAll('#toast-container .toast-item');
+  toasts.forEach((el, idx) => {
+    setTimeout(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 60 * idx);
+    const life = (el.dataset.level || '').includes('success') ? 2500 : 3500;
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(10px)';
+      setTimeout(() => el.remove(), 250);
+    }, life);
+  });
+})();
+</script>
+{% endif %}
