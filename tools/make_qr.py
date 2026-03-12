@@ -1,17 +1,21 @@
 ﻿import os
-import socket
+import sys
 from pathlib import Path
 
 import qrcode
 
+# Read URL from command line argument or environment
+url = None
+if len(sys.argv) > 1:
+    url = sys.argv[1].strip()
 
-def build_default_url() -> str:
-    host = os.environ.get("COMPUTERNAME") or socket.gethostname() or "localhost"
-    port = os.environ.get("QR_PORT", "8000")
-    return f"http://{host}:{port}"
+if not url:
+    url = os.environ.get("QR_URL", "").strip()
 
+if not url:
+    print("ERROR: No QR URL provided. Pass URL as argument or set QR_URL environment variable.")
+    sys.exit(1)
 
-url = os.environ.get("QR_URL", "").strip() or build_default_url()
 out = Path(__file__).resolve().parents[1] / "Capstone" / "static" / "app" / "qr-student-access.png"
 out.parent.mkdir(parents=True, exist_ok=True)
 

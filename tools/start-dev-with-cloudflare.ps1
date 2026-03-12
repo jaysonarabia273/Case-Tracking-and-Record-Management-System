@@ -41,23 +41,6 @@ if ($djangoProcess.HasExited) {
     throw 'Django server failed to start.'
 }
 
-if (Test-Path $qrUrlFile) {
-    $qrUrl = (Get-Content -Path $qrUrlFile -Raw).Trim()
-}
-
-if ([string]::IsNullOrWhiteSpace($qrUrl)) {
-    $hostName = $env:COMPUTERNAME
-    if ([string]::IsNullOrWhiteSpace($hostName)) {
-        $hostName = [System.Net.Dns]::GetHostName()
-    }
-    $qrUrl = "http://${hostName}:8000"
-}
-
-Write-Host "Generating stable phone QR for: $qrUrl"
-$env:QR_URL = $qrUrl
-& $pythonExe (Join-Path $PSScriptRoot 'make_qr.py') | Out-Null
-Remove-Item Env:QR_URL -ErrorAction SilentlyContinue
-
 Write-Host 'Starting Cloudflare tunnel...'
 $cloudflaredProcess = Start-Process -FilePath $cloudflaredExe `
     -ArgumentList @('tunnel', '--url', 'http://127.0.0.1:8000', '--loglevel', 'info', '--logfile', $cloudflaredLog) `
@@ -98,14 +81,18 @@ for ($i = 0; $i -lt 30; $i++) {
     }
 }
 
+if ($publicUrl) {
+    Write-Host "Generating QR code for public URL..."
+    & $pythonExe (Join-Path $PSScriptRoot 'make_qr.py') $publicUrl | Out-Null
+}
+
 Write-Host ''
 Write-Host "Django PID: $($djangoProcess.Id)"
 Write-Host "Cloudflared PID: $($cloudflaredProcess.Id)"
 Write-Host "Local URL: http://127.0.0.1:8000"
-Write-Host "Stable phone URL (QR): $qrUrl"
 if ($publicUrl) {
-    Write-Host "Public URL: $publicUrl" -ForegroundColor Green
+    Write-Host "Public URL (QR): $publicUrl" -ForegroundColor Green
 } else {
-    Write-Host "Public URL not detected yet. Check log: $cloudflaredLog" -ForegroundColor Yellow
+    Write-Host "Public URL not detected. Check log: $cloudflaredLog" -ForegroundColor Yellow
 }
 Write-Host "Stop both with: powershell -ExecutionPolicy Bypass -File $PSScriptRoot\stop-dev-with-cloudflare.ps1"
